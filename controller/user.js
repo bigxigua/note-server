@@ -36,11 +36,19 @@ module.exports = {
         }
     },
     /**
-    * 通过sessionId验证用户是否已经注册过.
-    * @param {string} sessionId - sessionId.
+    * 更新用户信息.
+    * @param {object} params - 用户表中字段key，value.
     * @returns {promise} 
     */
-    verifyToken() { },
-    updateUserInfo() { },
-    getUserInfo() { }
+    async updateUserInfo(params, account) {
+        try {
+            const updateResult = await mysqlBaseModel.updateUserByAccount(USER_TABLE_NAME, params, account);
+            console.log('---------------------updateResult-----------------------', updateResult);
+            return {};
+        } catch (error) {
+            console.log('---------------更新用户信息失败----------------', error);
+            return Promise.resolve([]);
+        }
+       
+    }
 }

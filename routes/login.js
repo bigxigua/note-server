@@ -1,7 +1,9 @@
 const router = require('koa-router')();
+const fnv = require('fnv-plus');
 const userController = require('../controller/user');
 const jwt = require('jsonwebtoken');
 const { JWT_KEY, cookieConfig } = require('../config/server-config');
+const { serializReuslt } = require('../util/serializable');
 /**
  * login 路由
  * 1. 检测用户是否已经注册过
@@ -11,40 +13,38 @@ const { JWT_KEY, cookieConfig } = require('../config/server-config');
 router.post('/login', async (ctx, next) => {
     // TODO signed cookie
     let { account, password } = ctx.request.body;
-    let token = ctx.cookies.get('token66');
-    console.log('--------------token------------------', token);
+    let token = ctx.cookies.get('token');
+    if (!token && !account && !password) {
+        ctx.body = serializReuslt('USER_NOT_LOGGED_IN');
+        return;
+    }
     if (token && !account && !password) {
-        let verifyResult = jwt.verify(token, JWT_KEY);
-        console.log('--------------verifyResult------------------', verifyResult);
+        let verifyResult = jwt.verify(token, JWT_KEY) || {};
+        if (verifyResult.account) {
+            account = verifyResult.account;
+        }
     }
     let user = await userController.findUser(account);
     if (!user || user.length === 0) {
-        user = await userController.createUser({ account, password });
+        user = await userController.createUser({
+            account,
+            password,
+            uuid: fnv.hash(account, 64)
+        });
         console.log('------------创建新用户成功------------', user[0]);
     } else {
         console.log('------------用户已存在------------', user[0]);
     }
-    ctx.cookies.set('token', 'tokentokentoken', cookieConfig);
     if (user && user.length > 0) {
         token = jwt.sign({
             account,
             exp: Math.floor((new Date().getTime()) / 1000) + 60 * 60 * 24 * 30
         }, JWT_KEY);
         ctx.cookies.set('token', token, cookieConfig);
-        ctx.cookies.set('token111', 'token', {});
-        ctx.body = {
-            userInfo: user[0],
-            token
-        }
+        ctx.body = serializReuslt('SUCCESS', user[0]);
     } else {
-        ctx.body = {
-            isError: true,
-            message: '系统繁忙,请稍后再试'
-        }
+        ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
     }
 });
-router.get('/authorization', async (ctx, next) => {
-
-})
 
 module.exports = router;

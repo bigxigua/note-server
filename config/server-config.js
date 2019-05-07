@@ -1,10 +1,9 @@
 exports.JWT_KEY = 'TBZ_KEY';
 exports.cookieConfig = {
-    domain: 'localhost',
+    domain: '127.0.0.1',
     signed: true,
     path: '/',
-    maxAge: 10 * 60 * 1000,
-    expires: new Date('2019-08-01'),
+    maxAge: 60 * 60 * 1000,
     httpOnly: false,
     overwrite: false
 };

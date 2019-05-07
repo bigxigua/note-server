@@ -6,8 +6,6 @@ const onerror = require('koa-onerror');
 const bodyparser = require('koa-bodyparser');
 const logger = require('koa-logger');
 const cors = require('koa-cors');
-
-const upload = require('./routes/upload');
 const updateDraft = require('./routes/updateDraft');
 const login = require('./routes/login');
 
@@ -16,17 +14,20 @@ onerror(app);
 
 // middlewares
 app.use(bodyparser({
-  enableTypes:['json', 'form', 'text']
+  enableTypes: ['json', 'form', 'text']
 }));
 app.use(json());
 app.use(logger());
-app.use(cors());
+app.use(cors({
+  credentials: true
+}));
 app.use(require('koa-static')(__dirname + '/public'));
 app.use(require('koa-static')(__dirname + '/views'));
 
 app.use(views(__dirname + '/views', {
   extension: 'html'
 }));
+
 app.keys = ['fuckme'];
 // logger
 app.use(async (ctx, next) => {

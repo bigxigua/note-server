@@ -60,20 +60,21 @@ class BaseMysql {
         // where like account='fuck222' and password='1111'
         return this.execute(`SELECT * FROM ${tableName} WHERE ${where};`);
     }
-    updateUserById(tableName, value, id) {
+    // 改
+    updateUserByAccount(tableName, value, account) {
         // value = {
         //     account: '111',
         //     password: '22222'
         // }
         let values = [];
-        // UPDATE ${tableName} SET account = ?, password = ? WHERE id = ?'
+        // UPDATE ${tableName} SET account = ?, password = ? WHERE account = ?'
         const updateSql = value.keys().reduce((p, v) => {
             values.push(value[p]);
             return `${p} = ?, ` + `${v} = ? `;
         }, '');
-        values.push(id);
-        // values like ['a', 'b', 'c', userId]
-        let sql = `update ${tableName} ${updateSql} WHERE id = ?`;
+        values.push(account);
+        // values like ['a', 'b', 'c', account]
+        let sql = `update ${tableName} ${updateSql} WHERE account = ?`;
         return this.execute(sql, values);
     }
 }
