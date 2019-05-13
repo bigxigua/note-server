@@ -56,9 +56,16 @@ class BaseMysql {
         return this.execute(sql);
     }
     // 查
-    findOne(tableName, where) {
+    find(tableName, where) {
         // where like account='fuck222' and password='1111'
         return this.execute(`SELECT * FROM ${tableName} WHERE ${where};`);
+    }
+    update(tableName, params, where) {
+        const updateSql = Object.keys(params).reduce((p, v, i) => {
+            const value = typeof params[v] === 'number' ? params[v] : `'${params[v]}'`;
+            return p + `${v}=${value}${i === Object.keys(params).length - 1 ? '' : ','} `;
+        }, '');
+        return this.execute(`update ${tableName} SET ${updateSql} WHERE ${where}`);
     }
     // 改
     updateUserByAccount(tableName, value, account) {

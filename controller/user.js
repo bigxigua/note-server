@@ -1,21 +1,26 @@
 const mysqlBaseModel = require('../models/db-mysql');
 const USER_TABLE_NAME = 'note_user_info';
-
+const DEFAULT_USERINFO_PARAMS = {
+    account: '', // 账户
+    nickname: '', // 昵称
+    password: '', // 密码
+    uuid: '', // uuid
+}
 module.exports = {
     /**
     * 创建一个新用户.
-    * @param {string} account - 账户.
-    * @param {string} password - 密码.
+    * @param {object} params - 用户数据.
     * @returns {promise} 
     */
-    async createUser({ account, password }) {
+    async createUser(params) {
+        const options = {
+            ...DEFAULT_USERINFO_PARAMS,
+            ...params
+        };
         try {
-            const createResult = await mysqlBaseModel.insert(USER_TABLE_NAME, {
-                account,
-                password
-            });
+            const createResult = await mysqlBaseModel.insert(USER_TABLE_NAME, options);
             if (createResult) {
-                return this.findUser(account);
+                return Promise.resolve(options);
             }
         } catch (error) {
             console.log('---------------创建用户失败----------------', error);
@@ -24,12 +29,12 @@ module.exports = {
     },
     /**
     * 查询数据库内是否已存在该用户信息.
-    * @param {string} account - 用户账户.
+    * @param {string} whereSql - where条件语句
     * @returns {object} 用户信息
     */
-    async findUser(account) {
+    async findUser(whereSql) {
         try {
-            return mysqlBaseModel.findOne(USER_TABLE_NAME, `account='${account}'`);
+            return mysqlBaseModel.find(USER_TABLE_NAME, whereSql);
         } catch (error) {
             console.log('---------------查找用户信息失败----------------', error);
             return Promise.resolve([]);

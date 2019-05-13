@@ -13,12 +13,13 @@ const RESULT_CODES = {
     USER_ACCOUNT_FORBIDDEN: create(20003, '账号已被禁用'),
     USER_NOT_EXIST: create(20004, '用户不存在'),
     USER_HAS_EXISTED: create(20005, '用户已存在'),
+    USER_HAS_NOT_CREATED_NOTEBOOK: create(20005, '你暂未创建笔记哟'),
 
     /* 业务错误：30001-39999 */
     SPECIFIED_QUESTIONED_USER_NOT_EXIST: create(30001, '某业务出现问题'),
 
     /* 系统错误：40001-49999 */
-    SYSTEM_INNER_ERROR: create(40001, '系统繁忙，请稍后重试'),
+    SYSTEM_INNER_ERROR: create(40001, '系统繁忙，请稍后重试500'),
 
     /* 数据错误：50001-599999 */
     RESULE_DATA_NONE: create(50001, '数据未找到'),
