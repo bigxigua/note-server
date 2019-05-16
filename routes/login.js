@@ -29,7 +29,7 @@ router.post('/login', async (ctx, next) => {
     } else {
         uuid = fnv.hash(account, 64).str();
     }
-    console.log('----uuid----', uuid);
+    console.log('----uuid1----', uuid);
     if (!uuid) {
         ctx.body = serializReuslt('USER_NOT_LOGGED_IN');
         return;
