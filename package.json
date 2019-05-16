@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node-dev bin/www",
     "dev": "./node_modules/.bin/nodemon bin/www",
-    "pm2start": "pm2 start bin/www"
+    "pm2start": "pm2 start ./bin/www --watch"
   },
   "dependencies": {
     "busboy": "^0.2.14",
