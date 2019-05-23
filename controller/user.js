@@ -20,7 +20,7 @@ module.exports = {
         try {
             const createResult = await mysqlBaseModel.insert(USER_TABLE_NAME, options);
             if (createResult) {
-                return Promise.resolve(options);
+                return Promise.resolve([options]);
             }
         } catch (error) {
             console.log('---------------创建用户失败----------------', error);

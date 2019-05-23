@@ -9,6 +9,7 @@ const DEFAULT_NOTE_PARAMS = {
     sub_note_title: '', // 笔记标题
     sub_note_id: '', // 子笔记
     is_notebook: 0, // 是笔记本还是子笔记 1是0否
+    sub_note_exist: 1, // 子笔记是否可用(没有被删除) 1是0否
 };
 module.exports = {
     /**
@@ -41,7 +42,7 @@ module.exports = {
         try {
             return mysqlBaseModel.find(NOTEBOOK_TABLE_NAME, sql);
         } catch (error) {
-            console.log('---------------查找用户信息失败----------------', error);
+            console.log('---------------查找笔记失败----------------', error);
             return Promise.resolve([]);
         }
     },
@@ -54,8 +55,21 @@ module.exports = {
         try {
             return mysqlBaseModel.update(NOTEBOOK_TABLE_NAME, params, where);
         } catch (error) {
-            console.log('---------------查找用户信息失败----------------', error);
+            console.log('---------------更新笔记失败----------------', error);
             return Promise.resolve([]);
         }
     },
+    /**
+    * 真实删除一个笔记.
+    * @param {string} params.
+    * @returns {object} 笔记数据
+    */
+   async deleteNotebook(where) {
+    try {
+        return mysqlBaseModel.delete(NOTEBOOK_TABLE_NAME, where);
+    } catch (error) {
+        console.log('---------------删除笔记失败----------------', error);
+        return Promise.resolve([]);
+    }
+},
 }

@@ -29,14 +29,12 @@ router.post('/login', async (ctx, next) => {
     } else {
         uuid = fnv.hash(account, 64).str();
     }
-    console.log('----uuid1----', uuid);
     if (!uuid) {
         ctx.body = serializReuslt('USER_NOT_LOGGED_IN');
         return;
     }
     let user = await userController.findUser(`uuid='${uuid}'`);
-    console.log('------------user------------',user);
-    console.log('------------password------------',password);
+    console.log('------------user存在？------------',user);
     if (!user || user.length === 0) {
         user = await userController.createUser({
             account,

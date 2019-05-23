@@ -7,5 +7,8 @@ module.exports = {
 				resolve(!!err);
 			});
 		})
+	},
+	isArray: (list) => {
+		return Array.isArray(list) && list.length > 0;
 	}
 }

@@ -8,6 +8,7 @@ const logger = require('koa-logger');
 const cors = require('koa-cors');
 const updateDraft = require('./routes/updateDraft');
 const login = require('./routes/login');
+const verify = require('./middleware/verify');
 
 // error handler
 onerror(app);
@@ -21,6 +22,7 @@ app.use(logger());
 app.use(cors({
   credentials: true
 }));
+app.use(verify());
 app.use(require('koa-static')(__dirname + '/public'));
 app.use(require('koa-static')(__dirname + '/views'));
 

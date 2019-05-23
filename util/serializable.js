@@ -13,7 +13,6 @@ const RESULT_CODES = {
     USER_ACCOUNT_FORBIDDEN: create(20003, '账号已被禁用'),
     USER_NOT_EXIST: create(20004, '用户不存在'),
     USER_HAS_EXISTED: create(20005, '用户已存在'),
-    USER_HAS_NOT_CREATED_NOTEBOOK: create(20005, '你暂未创建笔记哟'),
 
     /* 业务错误：30001-39999 */
     SPECIFIED_QUESTIONED_USER_NOT_EXIST: create(30001, '某业务出现问题'),
@@ -36,7 +35,11 @@ const RESULT_CODES = {
     INTERFACE_EXCEED_LOAD: create(60006, '接口负载过高'),
 
     /* 权限错误：70001-79999 */
-    PERMISSION_NO_ACCESS: create(70001, '无访问权限')
+    PERMISSION_NO_ACCESS: create(70001, '无访问权限'),
+
+    /* 业务错误 80001-99999 */
+    USER_HAS_NOT_CREATED_NOTEBOOK: create(80001, '你暂未创建笔记哟'),
+    SUBNOTEBOOK_NOT_EXIT:  create(80002, '未找到该笔记'),
 };
 const DEFAULT_RESULT = {
     message: '系统繁忙，请稍后再试',
