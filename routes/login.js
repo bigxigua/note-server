@@ -22,7 +22,7 @@ router.post('/login', async (ctx, next) => {
     }
     // 自动登陆有token时
     if (token && !account && !password) {
-        let verifyResult = jwt.verify(token, JWT_KEY) || {};
+        let verifyResult = await jwt.verify(token, JWT_KEY) || {};
         if (verifyResult.uuid) {
             uuid = verifyResult.uuid;
         }

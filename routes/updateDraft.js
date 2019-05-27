@@ -27,6 +27,7 @@ router.post('/updateDraft', async (ctx, next) => {
 /**
  * createNotebook 创建新的笔记本
  *  @noteBookName {string} 笔记本名称
+ *  @notebookId {string} 笔记本id
  *  @isCreateSubNote {boolean} 是否是新建子笔记
  *  @subNoteTitle {string} 子笔记本标题
  *  @returns {object} 笔记数据
@@ -53,6 +54,7 @@ router.post('/createNotebook', async (ctx, next) => {
         // 正在创建子笔记
         createResult = await notebookController.createNotebook({
             ...columns,
+            notebook_id: notebookId,
             is_notebook: 0
         });
     } else {

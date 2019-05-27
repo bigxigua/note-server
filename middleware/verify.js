@@ -39,6 +39,10 @@ module.exports = function () {
         let token = cookies.get('token');
         const url = request.url.substring(1);
         const { notEmptyParamsName, needToVerifyUser } = VERIFY_RULES[url] || DEFAULT_VERIFY;
+        if (!VERIFY_RULES[url]) {
+            await next();
+            return;
+        }
         // 用户操作身份验证 -无token
         if (needToVerifyUser && !token) {
             ctx.body = serializReuslt('USER_NOT_LOGGED_IN');
