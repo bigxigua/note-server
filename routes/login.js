@@ -15,6 +15,7 @@ router.post('/login', async (ctx, next) => {
     let { account, password } = ctx.request.body;
     let token = ctx.cookies.get('token');
     let uuid = '';
+    let userLoginVersion = '';
     // 自动登陆无token时
     if (!token && !account && !password) {
         ctx.body = serializReuslt('USER_NOT_LOGGED_IN');
@@ -25,6 +26,7 @@ router.post('/login', async (ctx, next) => {
         let verifyResult = await jwt.verify(token, JWT_KEY) || {};
         if (verifyResult.uuid) {
             uuid = verifyResult.uuid;
+            userLoginVersion = verifyResult.userLoginVersion;
         }
     } else {
         uuid = fnv.hash(account, 64).str();
@@ -35,19 +37,23 @@ router.post('/login', async (ctx, next) => {
     }
     let user = await userController.findUser(`uuid='${uuid}'`);
     console.log('------------user存在？------------',user);
+    // 比较jwt获取到的userLoginVersion和用户表里的是否一致，如果不一致则token无效
     if (!user || user.length === 0) {
         user = await userController.createUser({
             account,
             password,
-            uuid
+            uuid,
+            user_login_version: Date.now()
         });
         console.log('------------创建新用户成功------------', user[0]);
-    } else {
-        console.log('------------用户已存在------------', user[0]);
     }
     if (user && user.length > 0) {
         if (user[0].password !== password && !token) {
             ctx.body = serializReuslt('USER_LOGIN_ERROR');
+            return;
+        }
+        if (userLoginVersion && userLoginVersion !== user[0].user_login_version) {
+            ctx.body = serializReuslt('USER_INVALIDATION_OF_IDENTITY');
             return;
         }
         token = jwt.sign({

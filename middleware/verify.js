@@ -14,6 +14,12 @@ const VERIFY_RULES = {
         notEmptyParamsName: ['noteBookName'],
         needToVerifyUser: true,
     },
+    createSubNotebook: {
+        comments: '创建新的子笔记',
+        methods: 'POST',
+        notEmptyParamsName: ['notebookId', 'subNoteTitle'],
+        needToVerifyUser: true,
+    },
     getUserNotes: {
         comments: '查找用户的所有的笔记本',
         methods: 'GET',

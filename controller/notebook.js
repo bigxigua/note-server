@@ -1,35 +1,37 @@
 const mysqlBaseModel = require('../models/db-mysql');
 const NOTEBOOK_TABLE_NAME = 'note_notebook';
-
-const DEFAULT_NOTE_PARAMS = {
-    notebook_name: '', // 笔记本名称
-    user_id: '', // 用户的uuid
-    sub_note_html: '', // 子笔记html文本
-    sub_note_markdown: '', // 子笔记markdown文本
-    sub_note_title: '', // 笔记标题
-    sub_note_id: '', // 子笔记
-    is_notebook: 0, // 是笔记本还是子笔记 1是0否
-    sub_note_exist: 1, // 子笔记是否可用(没有被删除) 1是0否
-};
+const SUB_NOTEBOOK_TABLE_NAME = 'note_subnote';
 module.exports = {
     /**
     * 创建一个新笔记.
     * @param {object} params - 账户.
     * @returns {} 
     */
-    async createNotebook(params) {
-        const notebookInfo = {
-            ...DEFAULT_NOTE_PARAMS,
-            ...params
-        };
+    async createNotebook(params, tableName) {
         try {
-            await mysqlBaseModel.insert(NOTEBOOK_TABLE_NAME, notebookInfo);
+            const result = await mysqlBaseModel.insert(tableName, params);
+            console.log(result);
             return {
-                ...notebookInfo,
-                subNotes: [notebookInfo]
+                ...params,
+                subNotes: []
             };
         } catch (error) {
             console.log('---------------创建笔记本失败----------------', error);
+            return null;
+        }
+    },
+    /**
+    * 创建一个子笔记.
+    * @param {object} params - 账户.
+    * @returns {} 
+    */
+    async createSubNotebook(params) {
+        try {
+            const result = await mysqlBaseModel.insert(SUB_NOTEBOOK_TABLE_NAME, params);
+            console.log(result);
+            return params;
+        } catch (error) {
+            console.log('---------------创建子笔记本失败----------------', error);
             return null;
         }
     },
@@ -38,9 +40,9 @@ module.exports = {
     * @param {string} account - 用户账户.
     * @returns {object} 用户信息
     */
-    async findNoteBooks(sql) {
+    async findNoteBooks(sql, tableName) {
         try {
-            return mysqlBaseModel.find(NOTEBOOK_TABLE_NAME, sql);
+            return mysqlBaseModel.find(tableName, sql);
         } catch (error) {
             console.log('---------------查找笔记失败----------------', error);
             return Promise.resolve([]);
@@ -51,9 +53,9 @@ module.exports = {
     * @param {string} params - 需要更新的数据.
     * @returns {object} 笔记数据
     */
-    async updateNotebook(params, where) {
+    async updateNotebook(params, where, tableName) {
         try {
-            return mysqlBaseModel.update(NOTEBOOK_TABLE_NAME, params, where);
+            return mysqlBaseModel.update(tableName, params, where);
         } catch (error) {
             console.log('---------------更新笔记失败----------------', error);
             return Promise.resolve([]);
@@ -64,12 +66,12 @@ module.exports = {
     * @param {string} params.
     * @returns {object} 笔记数据
     */
-   async deleteNotebook(where) {
-    try {
-        return mysqlBaseModel.delete(NOTEBOOK_TABLE_NAME, where);
-    } catch (error) {
-        console.log('---------------删除笔记失败----------------', error);
-        return Promise.resolve([]);
-    }
-},
+    async deleteNotebook(where) {
+        try {
+            return mysqlBaseModel.delete(NOTEBOOK_TABLE_NAME, where);
+        } catch (error) {
+            console.log('---------------删除笔记失败----------------', error);
+            return Promise.resolve([]);
+        }
+    },
 }
