@@ -24,7 +24,7 @@ class BaseMysql {
         });
     }
     execute(sql, params = {}) {
-        console.log('----------------sql-----------------------', sql);
+        console.log('----------------sql-----------------------', sql, params);
         return new Promise((resolve, reject) => {
             this.pool.getConnection((error, connection) => {
                 if (error) {
@@ -69,18 +69,12 @@ class BaseMysql {
     }
     // 改
     updateUserByAccount(tableName, value, account) {
-        // value = {
-        //     account: '111',
-        //     password: '22222'
-        // }
         let values = [];
-        // UPDATE ${tableName} SET account = ?, password = ? WHERE account = ?'
         const updateSql = value.keys().reduce((p, v) => {
             values.push(value[p]);
             return `${p} = ?, ` + `${v} = ? `;
         }, '');
         values.push(account);
-        // values like ['a', 'b', 'c', account]
         let sql = `update ${tableName} ${updateSql} WHERE account = ?`;
         return this.execute(sql, values);
     }

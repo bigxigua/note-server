@@ -45,13 +45,11 @@ module.exports = {
     * @param {object} params - 用户表中字段key，value.
     * @returns {promise} 
     */
-    async updateUserInfo(params, account) {
+    async updateUserInfo(params, where) {
         try {
-            const updateResult = await mysqlBaseModel.updateUserByAccount(USER_TABLE_NAME, params, account);
-            console.log('---------------------updateResult-----------------------', updateResult);
-            return {};
+            return mysqlBaseModel.update(USER_TABLE_NAME, params, where);
         } catch (error) {
-            console.log('---------------更新用户信息失败----------------', error);
+            console.log('---------------更新笔记失败----------------', error);
             return Promise.resolve([]);
         }
        

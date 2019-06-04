@@ -26,7 +26,7 @@ router.post('/login', async (ctx, next) => {
         let verifyResult = await jwt.verify(token, JWT_KEY) || {};
         if (verifyResult.uuid) {
             uuid = verifyResult.uuid;
-            userLoginVersion = verifyResult.userLoginVersion;
+            userLoginVersion = verifyResult.userLoginVersion + '';
         }
     } else {
         uuid = fnv.hash(account, 64).str();
@@ -36,7 +36,6 @@ router.post('/login', async (ctx, next) => {
         return;
     }
     let user = await userController.findUser(`uuid='${uuid}'`);
-    console.log('------------user存在？------------',user);
     // 比较jwt获取到的userLoginVersion和用户表里的是否一致，如果不一致则token无效
     if (!user || user.length === 0) {
         user = await userController.createUser({
@@ -45,7 +44,6 @@ router.post('/login', async (ctx, next) => {
             uuid,
             user_login_version: Date.now()
         });
-        console.log('------------创建新用户成功------------', user[0]);
     }
     if (user && user.length > 0) {
         if (user[0].password !== password && !token) {
@@ -58,13 +56,33 @@ router.post('/login', async (ctx, next) => {
         }
         token = jwt.sign({
             uuid,
+            userLoginVersion: user[0].user_login_version,
             exp: Math.floor((new Date().getTime()) / 1000) + 60 * 60 * 24 * 30
         }, JWT_KEY);
         ctx.cookies.set('token', token, cookieConfig);
         ctx.body = serializReuslt('SUCCESS', user[0]);
     } else {
-        ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
+        ctx.body = serializReuslt('USER_NOT_EXIST');
     }
 });
+/**
+ * 退出登陆
+ */
+router.post('/outLogin', async (ctx, next) => {
+    const { uuid } = ctx.request.body;
+    let user = await userController.findUser(`uuid='${uuid}'`);
+    if (user && user.length > 0) {
+        let result = await userController.updateUserInfo({
+            user_login_version: Date.now()
+        }, `uuid='${uuid}'`);
+        if (result && result.changedRows > 0) {
+            ctx.body = serializReuslt('SUCCESS', {});
+        } else {
+            ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
+        }
+    } else {
+        ctx.body = serializReuslt('USER_NOT_EXIST');
+    }
+})
 
 module.exports = router;

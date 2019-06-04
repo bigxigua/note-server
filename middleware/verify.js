@@ -1,11 +1,18 @@
 const { serializReuslt } = require('../util/serializable');
 const { JWT_KEY } = require('../config/server-config');
 const jwt = require('jsonwebtoken');
+const userController = require('../controller/user');
 const VERIFY_RULES = {
+    outLogin: {
+        comments: '退出登陆',
+        methods: 'POST',
+        notEmptyParamsName: [],
+        needToVerifyUser: true,
+    },
     updateDraft: {
         comments: '更新笔记表的数据',
         methods: 'POST',
-        notEmptyParamsName: ['html', 'markdown', 'subNoteId'],
+        notEmptyParamsName: ['subNoteId'],
         needToVerifyUser: true,
     },
     createNotebook: {
@@ -31,6 +38,12 @@ const VERIFY_RULES = {
         methods: 'POST',
         notEmptyParamsName: ['type', 'subNoteId'],
         needToVerifyUser: true,
+    },
+    getRecentEditorSubnote: {
+        comments: '获取用户最近编辑的子笔记信息',
+        methods: 'GET',
+        notEmptyParamsName: [],
+        needToVerifyUser: true,
     }
 };
 const DEFAULT_VERIFY = {
@@ -54,13 +67,13 @@ module.exports = function () {
             ctx.body = serializReuslt('USER_NOT_LOGGED_IN');
             return;
         }
-        let { uuid } = jwt.verify(token, JWT_KEY) || {};
+        let { uuid, userLoginVersion } = jwt.verify(token, JWT_KEY) || {};
+        console.log('-------userLoginVersion-------', userLoginVersion);
         // 用户操作身份验证 -无uuid
         if (needToVerifyUser && !uuid) {
             ctx.body = serializReuslt('USER_NOT_EXIST');
             return;
         }
-        // TODO 增加获取用户身份操作
         const parameterIsNotValid = notEmptyParamsName.every((key) => {
             const value = request.body[key];
             return (typeof value !== 'number' && typeof value !== 'boolean') ? request.body[key] : true;
@@ -68,6 +81,12 @@ module.exports = function () {
         // 参数不合法校验
         if (!parameterIsNotValid) {
             ctx.body = serializReuslt('PARAM_NOT_COMPLETE');
+            return;
+        }
+        // 用户登陆身份有效性校验
+        let user = await userController.findUser(`uuid='${uuid}'`);
+        if (!user || !user[0] || user[0].user_login_version !== userLoginVersion) {
+            ctx.body = serializReuslt('USER_INVALIDATION_OF_IDENTITY');
             return;
         }
         ctx.request.body.uuid = uuid;

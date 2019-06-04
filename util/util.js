@@ -10,5 +10,5 @@ module.exports = {
 	},
 	isArray: (list) => {
 		return Array.isArray(list) && list.length > 0;
-	}
+	},
 }

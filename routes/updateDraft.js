@@ -14,10 +14,13 @@ const SUB_NOTEBOOK_TABLE_NAME = 'note_subnote';
  */
 router.post('/updateDraft', async (ctx, next) => {
     let { html, markdown, subNoteId } = ctx.request.body;
+    markdown = markdown.replace(/'/img, "''");
+    html = html.replace(/'/img, "''");
     const result = await notebookController.updateNotebook({
         sub_note_html: html,
         sub_note_markdown: markdown,
-    }, `sub_note_id='${subNoteId}'`);
+        sub_note_last_update: Date.now()
+    }, `sub_note_id='${subNoteId}'`, SUB_NOTEBOOK_TABLE_NAME);
     if (result.changedRows > 0) {
         ctx.body = serializReuslt('SUCCESS', {});
     } else {
@@ -38,6 +41,7 @@ router.post('/createNotebook', async (ctx, next) => {
         notebook_id: fnv.hash(noteBookName + uuid + now, 64).str(),
         user_id: uuid,
         notebook_created_time: now,
+        notebook_last_update: now,
         notebook_name: noteBookName,
         note_exist: 1,
     }, NOTEBOOK_TABLE_NAME);
@@ -56,7 +60,6 @@ router.post('/createNotebook', async (ctx, next) => {
 router.post('/createSubNotebook', async (ctx, next) => {
     const { notebookId, subNoteTitle = '笔记示例' } = ctx.request.body;
     const { uuid } = ctx.request.body;
-    console.log('------uuid-----', uuid);
     const now = Date.now();
     const noteBookInfo = await notebookController.findNoteBooks(`user_id='${uuid}' AND notebook_id='${notebookId}'`, NOTEBOOK_TABLE_NAME);
     if (!noteBookInfo) {
@@ -68,6 +71,7 @@ router.post('/createSubNotebook', async (ctx, next) => {
         user_id: uuid,
         sub_note_id: fnv.hash(notebookId + subNoteTitle + uuid + now, 64).str(),
         sub_note_created_time: now,
+        sub_note_last_update: now,
         sub_note_html: '<p>这是一个新的笔记</p>↵',
         sub_note_markdown: '这是一个新的笔记',
         sub_note_title: subNoteTitle,
@@ -102,7 +106,7 @@ router.get('/getUserNotes', async (ctx, next) => {
         }
         ctx.body = serializReuslt('SUCCESS', notebooks);
     } else {
-        ctx.body = serializReuslt('USER_HAS_NOT_CREATED_NOTEBOOK', {});
+        ctx.body = serializReuslt('USER_HAS_NOT_CREATED_NOTEBOOK');
     }
 });
 /**
@@ -131,6 +135,20 @@ router.post('/deleteSubNote', async (ctx, next) => {
         }
     } else {
         ctx.body = serializReuslt('SUBNOTEBOOK_NOT_EXIT');
+    }
+});
+/**
+ *  获取用户最近一次编辑的子笔记信息
+ *  @returns {object} 子笔记数据
+ */
+router.get('/getRecentEditorSubnote', async (ctx, next) => {
+    const { uuid } = ctx.request.body;
+    let notes = await notebookController.findNoteBooks(`user_id='${uuid}' AND sub_note_exist=1 `, SUB_NOTEBOOK_TABLE_NAME);
+    if (isArray(notes)) {
+        notes = notes.sort((prev, next) => prev.sub_note_last_update <= next.sub_note_last_update);
+        ctx.body = serializReuslt('SUCCESS', notes[0]);
+    } else {
+        ctx.body = serializReuslt('USER_HAS_NOT_CREATED_NOTEBOOK');
     }
 });
 module.exports = router;
