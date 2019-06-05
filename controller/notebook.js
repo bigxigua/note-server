@@ -66,9 +66,9 @@ module.exports = {
     * @param {string} params.
     * @returns {object} 笔记数据
     */
-    async deleteNotebook(where) {
+    async deleteNotebook(where, tableName) {
         try {
-            return mysqlBaseModel.delete(NOTEBOOK_TABLE_NAME, where);
+            return mysqlBaseModel.delete(tableName, where);
         } catch (error) {
             console.log('---------------删除笔记失败----------------', error);
             return Promise.resolve([]);

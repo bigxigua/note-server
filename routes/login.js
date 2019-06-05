@@ -26,7 +26,7 @@ router.post('/login', async (ctx, next) => {
         let verifyResult = await jwt.verify(token, JWT_KEY) || {};
         if (verifyResult.uuid) {
             uuid = verifyResult.uuid;
-            userLoginVersion = verifyResult.userLoginVersion + '';
+            userLoginVersion = verifyResult.userLoginVersion;
         }
     } else {
         uuid = fnv.hash(account, 64).str();
@@ -42,7 +42,7 @@ router.post('/login', async (ctx, next) => {
             account,
             password,
             uuid,
-            user_login_version: Date.now()
+            user_login_version: Date.now() + ''
         });
     }
     if (user && user.length > 0) {

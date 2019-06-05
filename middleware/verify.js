@@ -68,7 +68,6 @@ module.exports = function () {
             return;
         }
         let { uuid, userLoginVersion } = jwt.verify(token, JWT_KEY) || {};
-        console.log('-------userLoginVersion-------', userLoginVersion);
         // 用户操作身份验证 -无uuid
         if (needToVerifyUser && !uuid) {
             ctx.body = serializReuslt('USER_NOT_EXIST');
@@ -85,6 +84,8 @@ module.exports = function () {
         }
         // 用户登陆身份有效性校验
         let user = await userController.findUser(`uuid='${uuid}'`);
+        console.log('-------userLoginVersion-------', typeof userLoginVersion, userLoginVersion);
+        console.log('-------user[0].user_login_version-------', typeof user[0].user_login_version, user[0].user_login_version);
         if (!user || !user[0] || user[0].user_login_version !== userLoginVersion) {
             ctx.body = serializReuslt('USER_INVALIDATION_OF_IDENTITY');
             return;

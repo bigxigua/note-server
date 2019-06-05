@@ -52,7 +52,7 @@ class BaseMysql {
     }
     // 删
     delete(tableName, condition) {
-        let sql = `IDELETE FROM ${tableName} WHERE ${condition}`;
+        let sql = `DELETE FROM ${tableName} WHERE ${condition}`;
         return this.execute(sql);
     }
     // 查
