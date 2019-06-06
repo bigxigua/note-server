@@ -41,6 +41,7 @@ const RESULT_CODES = {
     /* 业务错误 80001-99999 */
     USER_HAS_NOT_CREATED_NOTEBOOK: create(80001, '你暂未创建笔记哟'),
     SUBNOTEBOOK_NOT_EXIT:  create(80002, '未找到该笔记'),
+    SUBNOTEBOOK_NOT_SEARCH:  create(80003, '未查找到结果'),
 };
 const DEFAULT_RESULT = {
     message: '系统繁忙，请稍后再试',

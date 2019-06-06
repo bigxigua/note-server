@@ -60,7 +60,7 @@ router.post('/createNotebook', async (ctx, next) => {
  *  @returns {object} 笔记数据
  */
 router.post('/createSubNotebook', async (ctx, next) => {
-    const { notebookId, subNoteTitle = '笔记示例' } = ctx.request.body;
+    const { notebookId, subNoteName = '笔记示例' } = ctx.request.body;
     const { uuid } = ctx.request.body;
     const now = Date.now();
     const noteBookInfo = await notebookController.findNoteBooks(`user_id='${uuid}' AND notebook_id='${notebookId}'`, NOTEBOOK_TABLE_NAME);
@@ -71,12 +71,13 @@ router.post('/createSubNotebook', async (ctx, next) => {
     let createResult = await notebookController.createNotebook({
         notebook_id: notebookId,
         user_id: uuid,
-        sub_note_id: fnv.hash(notebookId + subNoteTitle + uuid + now, 64).str(),
+        sub_note_id: fnv.hash(notebookId + subNoteName + uuid + now, 64).str(),
         sub_note_created_time: now,
         sub_note_last_update: now,
+        sub_note_name: subNoteName,
+        sub_note_title: subNoteName,
         sub_note_html: '<p>这是一个新的笔记</p>↵',
         sub_note_markdown: '这是一个新的笔记',
-        sub_note_title: subNoteTitle,
         sub_note_exist: 1,
     }, SUB_NOTEBOOK_TABLE_NAME);
     if (createResult) {
@@ -150,8 +151,8 @@ router.post('/deleteSubNote', async (ctx, next) => {
  *  @returns {object} 子笔记数据
  */
 router.get('/getRecentEditorSubnote', async (ctx, next) => {
-    const { uuid, subNoteId } = ctx.request.body;
-    let notes = await notebookController.findNoteBooks(`user_id='${uuid}' AND sub_note_id='${subNoteId}' `, SUB_NOTEBOOK_TABLE_NAME);
+    const { uuid } = ctx.request.body;
+    let notes = await notebookController.findNoteBooks(`user_id='${uuid}' AND sub_note_exist=1 `, SUB_NOTEBOOK_TABLE_NAME);
     if (isArray(notes)) {
         notes = notes.sort((prev, next) => prev.sub_note_last_update <= next.sub_note_last_update);
         ctx.body = serializReuslt('SUCCESS', notes[0]);
@@ -165,21 +166,41 @@ router.get('/getRecentEditorSubnote', async (ctx, next) => {
  *  @subNoteId {string} subNoteId. 子笔记sub_note_id
  *  @returns {object} 子笔记数据
  */
-router.get('/updateSubnoteInfo', async (ctx, next) => {
+router.post('/updateSubnoteInfo', async (ctx, next) => {
     const { uuid, subNoteId, subNoteExist } = ctx.request.body;
     let notes = await notebookController.findNoteBooks(`user_id='${uuid}' AND sub_note_id='${subNoteId}' `, SUB_NOTEBOOK_TABLE_NAME);
     if (isArray(notes)) {
-        const result = await notebookController.updateNotebook({
+        const params = {
             sub_note_last_update: Date.now(),
             sub_note_exist: subNoteExist,
-        }, `sub_note_id='${subNoteId}'`, SUB_NOTEBOOK_TABLE_NAME);
+        };
+        const result = await notebookController.updateNotebook(params, `sub_note_id='${subNoteId}'`, SUB_NOTEBOOK_TABLE_NAME);
         if (result && result.changedRows > 0) {
-            ctx.body = serializReuslt('SUCCESS', {});
+            notes[0] = {
+                ...notes[0],
+                ...params
+            };
+            ctx.body = serializReuslt('SUCCESS', notes[0]);
         } else {
             ctx.body = serializReuslt('SUBNOTEBOOK_NOT_EXIT');
         }
     } else {
         ctx.body = serializReuslt('USER_HAS_NOT_CREATED_NOTEBOOK');
+    }
+});
+/**
+ *  根据子笔记名称搜索子笔记本
+ *  更新sub_note_exist
+ *  @subNoteId {string} subNoteId. 子笔记sub_note_id
+ *  @returns {object} 子笔记数据
+ */
+router.get('/searchSubNote', async (ctx, next) => {
+    const { uuid, subNoteName } = ctx.request.query;
+    let notes = await notebookController.findNoteBooks(`user_id='${uuid}' AND sub_note_name LIKE '%${subNoteName}%' `, SUB_NOTEBOOK_TABLE_NAME);
+    if (isArray(notes)) {
+        ctx.body = serializReuslt('SUCCESS', notes);
+    } else {
+        ctx.body = serializReuslt('SUCCESS', []);
     }
 });
 module.exports = router;

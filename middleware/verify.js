@@ -24,7 +24,7 @@ const VERIFY_RULES = {
     createSubNotebook: {
         comments: '创建新的子笔记',
         methods: 'POST',
-        notEmptyParamsName: ['notebookId', 'subNoteTitle'],
+        notEmptyParamsName: ['notebookId', 'subNoteName'],
         needToVerifyUser: true,
     },
     getUserNotes: {
@@ -44,6 +44,18 @@ const VERIFY_RULES = {
         methods: 'GET',
         notEmptyParamsName: [],
         needToVerifyUser: true,
+    },
+    updateSubnoteInfo: {
+        comments: '更新子笔记信息',
+        methods: 'GET',
+        notEmptyParamsName: [],
+        needToVerifyUser: true,
+    },
+    searchSubNote: {
+        comments: '搜索子笔记',
+        methods: 'GET',
+        notEmptyParamsName: ['subNoteName'],
+        needToVerifyUser: true,
     }
 };
 const DEFAULT_VERIFY = {
@@ -56,7 +68,8 @@ module.exports = function () {
     return async function verify(ctx, next) {
         const { cookies, request } = ctx;
         let token = cookies.get('token');
-        const url = request.url.substring(1);
+        const url = request.url.split('?')[0].substring(1);
+        const method = request.method;
         const { notEmptyParamsName, needToVerifyUser } = VERIFY_RULES[url] || DEFAULT_VERIFY;
         if (!VERIFY_RULES[url]) {
             await next();
@@ -74,8 +87,8 @@ module.exports = function () {
             return;
         }
         const parameterIsNotValid = notEmptyParamsName.every((key) => {
-            const value = request.body[key];
-            return (typeof value !== 'number' && typeof value !== 'boolean') ? request.body[key] : true;
+            const value = request[method === 'POST' ? 'body' : 'query'][key];
+            return (typeof value !== 'number' && typeof value !== 'boolean') ? value : true;
         });
         // 参数不合法校验
         if (!parameterIsNotValid) {
@@ -84,13 +97,12 @@ module.exports = function () {
         }
         // 用户登陆身份有效性校验
         let user = await userController.findUser(`uuid='${uuid}'`);
-        console.log('-------userLoginVersion-------', typeof userLoginVersion, userLoginVersion);
-        console.log('-------user[0].user_login_version-------', typeof user[0].user_login_version, user[0].user_login_version);
         if (!user || !user[0] || user[0].user_login_version !== userLoginVersion) {
             ctx.body = serializReuslt('USER_INVALIDATION_OF_IDENTITY');
             return;
         }
         ctx.request.body.uuid = uuid;
+        ctx.request.query.uuid = uuid;
         await next();
     }
 }
