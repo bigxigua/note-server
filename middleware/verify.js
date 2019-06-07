@@ -56,6 +56,12 @@ const VERIFY_RULES = {
         methods: 'GET',
         notEmptyParamsName: ['subNoteName'],
         needToVerifyUser: true,
+    },
+    uploadImage: {
+        comments: '上传图片',
+        methods: 'POST',
+        notEmptyParamsName: [],
+        needToVerifyUser: true,
     }
 };
 const DEFAULT_VERIFY = {

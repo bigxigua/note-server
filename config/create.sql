@@ -14,36 +14,60 @@
 -- 用户信息表
 -- ----------------------------
 DROP TABLE IF EXISTS `note_db`.`note_user_info`;
-CREATE TABLE `note_db`.`note_user_info` (
+CREATE TABLE `note_user_info` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '主键、自增',
   `account` varchar(20) DEFAULT '' COMMENT '登陆账号',
   `nickname` varchar(20) DEFAULT '' COMMENT '昵称',
   `password` varchar(20) NOT NULL COMMENT '密码',
-  `notebooks` json DEFAULT NULL COMMENT '用户笔记本列表',
-  `basket` json DEFAULT NULL COMMENT '废纸篓',
   `uuid` varchar(200) NOT NULL COMMENT '用户uid',
+  `user_login_version` varchar(200) NOT NULL COMMENT '用户登陆版本号',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8;
 
+-- CREATE TABLE `note_user_info` (
+--   `id` int(11) NOT NULL AUTO_INCREMENT,
+--   `account` varchar(20) DEFAULT '',
+--   `nickname` varchar(20) DEFAULT '',
+--   `password` varchar(20) NOT NULL,
+--   `uuid` varchar(200) NOT NULL,
+--   `user_login_version` varchar(200) NOT NULL,
+--   PRIMARY KEY (`id`)
+-- ) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8;
 -- ----------------------------
 -- Table structure for note_notebook
 -- 用户笔记表
 -- ----------------------------
 DROP TABLE IF EXISTS `note_db`.`note_notebook`;
 CREATE TABLE `note_notebook` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `sub_note_title` varchar(200) DEFAULT '' COMMENT '文章标题',
-  `sub_note_html` longtext COMMENT '文章的html',
-  `sub_note_markdown` longtext COMMENT '文章的markdown',
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '主键、自增',
+  `notebook_name` varchar(200) DEFAULT '' COMMENT '笔记本名称',
+  `notebook_id` varchar(200) DEFAULT NULL COMMENT '笔记本id',
+  `notebook_created_time` varchar(200) DEFAULT NULL COMMENT '笔记本创建时间',
   `user_id` varchar(200) NOT NULL COMMENT '用户id',
-  `notebook_name` varchar(200) NOT NULL COMMENT '笔记本名称',
-  `notebook_id` varchar(200) DEFAULT NULL COMMENT '笔记id',
-  `note_created_time` bigint(20) DEFAULT NULL COMMENT '创建时间',
-  `sub_note_created_time` bigint(20) DEFAULT NULL COMMENT '子笔记创建时间',
-  `is_notebook` int(11) DEFAULT '0' COMMENT '是否是笔记本，0是1否',
-  `sub_note_id` varchar(200) DEFAULT NULL COMMENT '子笔记id',
-  `is_sub_notebook` int(11) DEFAULT NULL COMMENT '是否是子笔记1是0否',
+  `note_exist` int(11) NOT NULL COMMENT '笔记是否可用(没有被删除) 1是0否',
+  `notebook_last_update` varchar(200) DEFAULT NULL COMMENT '最后一次更新时间',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=42 DEFAULT CHARSET=utf8;
+
+
+-- ----------------------------
+-- Table structure for note_notebook
+-- 用户子笔记表
+-- ----------------------------
+DROP TABLE IF EXISTS `note_db`.`note_subnote`;
+CREATE TABLE `note_db`.`note_subnote` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` varchar(200) NOT NULL COMMENT '所属的用户的uuid',
+  `sub_note_id` varchar(200) DEFAULT NULL COMMENT '子笔记id',
+  `sub_note_created_time` varchar(200) DEFAULT NULL COMMENT '子笔记创建时间',
+  `sub_note_exist` int(11) NOT NULL COMMENT '子笔记是否可用(没有被删除) 1是0否',
+  `sub_note_markdown` longtext NOT NULL COMMENT '子笔记markdown文本',
+  `sub_note_html` longtext NOT NULL COMMENT '子笔记html文本',
+  `sub_note_title` varchar(200) NOT NULL COMMENT '笔记标题',
+  `notebook_id` varchar(200) DEFAULT NULL COMMENT '所属笔记本的id',
+  `sub_note_last_update` varchar(200) DEFAULT NULL COMMENT '0',
+  `sub_note_name` varchar(200) DEFAULT NULL COMMENT '子笔记名称',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=75 DEFAULT CHARSET=utf8;
 
 
