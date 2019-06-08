@@ -60,7 +60,7 @@ const VERIFY_RULES = {
     uploadImage: {
         comments: '上传图片',
         methods: 'POST',
-        notEmptyParamsName: [],
+        notEmptyParamsName: ['fileId'],
         needToVerifyUser: true,
     }
 };

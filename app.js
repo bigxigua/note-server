@@ -3,8 +3,6 @@ const app = new Koa();
 const views = require('koa-views');
 const json = require('koa-json');
 const onerror = require('koa-onerror');
-const path = require('path');
-// const bodyparser = require('koa-bodyparser');
 const koaBody = require('koa-body');
 const logger = require('koa-logger');
 const cors = require('koa-cors');
@@ -17,9 +15,6 @@ const verify = require('./middleware/verify');
 onerror(app);
 
 // middlewares
-// app.use(bodyparser({
-//   enableTypes: ['json', 'form', 'text']
-// }));
 app.use(koaBody({
   multipart: true,
   json: true,
