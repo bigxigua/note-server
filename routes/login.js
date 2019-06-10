@@ -46,7 +46,7 @@ router.post('/login', async (ctx, next) => {
         });
     }
     if (user && user.length > 0) {
-        if (user[0].password !== password && !token) {
+        if (password && user[0].password !== password) {
             ctx.body = serializReuslt('USER_LOGIN_ERROR');
             return;
         }

@@ -7,7 +7,7 @@ const { hostname, port } = require('../config/server-config');
 function asyncFileWriteStreamClose(stream, fileName) {
     return new Promise((resolve) => {
         console.log(fileName);
-        if (fileName === 'a5079ccb7578e4325435.jpg') {
+        if (fileName === 'avatar_user.jpg') {
             resolve(false);
             return;
         }
