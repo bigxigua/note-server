@@ -36,6 +36,7 @@ router.post('/login', async (ctx, next) => {
         return;
     }
     let user = await userController.findUser(`uuid='${uuid}'`);
+    let isRegisterUser = false;
     // 比较jwt获取到的userLoginVersion和用户表里的是否一致，如果不一致则token无效
     if (!user || user.length === 0) {
         user = await userController.createUser({
@@ -44,6 +45,7 @@ router.post('/login', async (ctx, next) => {
             uuid,
             user_login_version: Date.now() + ''
         });
+        isRegisterUser = true;
     }
     if (user && user.length > 0) {
         if (password && user[0].password !== password) {
@@ -60,7 +62,10 @@ router.post('/login', async (ctx, next) => {
             exp: Math.floor((new Date().getTime()) / 1000) + 60 * 60 * 24 * 30
         }, JWT_KEY);
         ctx.cookies.set('token', token, cookieConfig);
-        ctx.body = serializReuslt('SUCCESS', user[0]);
+        ctx.body = serializReuslt('SUCCESS', {
+            ...user[0],
+            isRegisterUser
+        });
     } else {
         ctx.body = serializReuslt('USER_NOT_EXIST');
     }

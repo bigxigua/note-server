@@ -62,6 +62,12 @@ const VERIFY_RULES = {
         methods: 'POST',
         notEmptyParamsName: ['fileId'],
         needToVerifyUser: true,
+    },
+    deleteNotebook: {
+        comments: '删除笔记本',
+        methods: 'POST',
+        notEmptyParamsName: ['noteBookId', 'hasSubNotes'],
+        needToVerifyUser: true,
     }
 };
 const DEFAULT_VERIFY = {

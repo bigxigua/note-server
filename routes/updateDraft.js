@@ -35,8 +35,7 @@ router.post('/updateDraft', async (ctx, next) => {
  *  @returns {object} 笔记数据
  */
 router.post('/createNotebook', async (ctx, next) => {
-    const { noteBookName } = ctx.request.body;
-    const { uuid } = ctx.request.body;
+    const { noteBookName, uuid } = ctx.request.body;
     const now = Date.now();
     let createResult = await notebookController.createNotebook({
         notebook_id: fnv.hash(noteBookName + uuid + now, 64).str(),
@@ -50,6 +49,32 @@ router.post('/createNotebook', async (ctx, next) => {
         ctx.body = serializReuslt('SUCCESS', createResult);
     } else {
         ctx.body = serializReuslt('DATA_CREATE_FAILED');
+    }
+});
+
+/**
+ *  deleteNotebook 删除某个笔记本
+ *  @noteBookId {string} 笔记本名称
+ *  @returns {object} 笔记数据
+ */
+router.post('/deleteNotebook', async (ctx, next) => {
+    const { noteBookId, hasSubNotes, uuid } = ctx.request.body;
+    const querySql = `user_id='${uuid}' AND notebook_id='${noteBookId}' `;
+    if (hasSubNotes) {
+        // 如果有子笔记，需要删除所有子笔记(移动到废纸篓)
+        const deleteResult = await notebookController.deleteNotebook(querySql, SUB_NOTEBOOK_TABLE_NAME);
+        if (deleteResult.affectedRows > 0) {
+            ctx.body = serializReuslt('SUCCESS', {});
+        } else {
+            ctx.body = serializReuslt('SUBNOTEBOOK_NOT_EXIT');
+        }
+    } else {
+        const deleteResult = await notebookController.deleteNotebook(querySql, NOTEBOOK_TABLE_NAME);
+        if (deleteResult.affectedRows > 0) {
+            ctx.body = serializReuslt('SUCCESS', {});
+        } else {
+            ctx.body = serializReuslt('SUBNOTEBOOK_NOT_EXIT');
+        }
     }
 });
 
@@ -88,33 +113,6 @@ router.post('/createSubNotebook', async (ctx, next) => {
 });
 
 /**
- *  getUserNotes 查找用户的所有的笔记本
- *  @returns {null} 
- */
-router.get('/getUserNotes', async (ctx, next) => {
-    const { uuid } = ctx.request.body;
-    // TODO 优化，只需要查SUB_NOTEBOOK_TABLE_NAME表，对数据进行处理即可
-    let notebooks = await notebookController.findNoteBooks(`user_id='${uuid}'`, NOTEBOOK_TABLE_NAME);
-    if (isArray(notebooks)) {
-        const subNotes = await notebookController.findNoteBooks(`user_id='${uuid}'`, SUB_NOTEBOOK_TABLE_NAME);
-        if (isArray(subNotes)) {
-            notebooks = notebooks.map(notebook => {
-                notebook.subNotes = [];
-                subNotes.forEach(subnote => {
-                    if (subnote.notebook_id === notebook.notebook_id) {
-                        notebook.subNotes.push(subnote);
-                    }
-                });
-                return notebook;
-            });
-        }
-        ctx.body = serializReuslt('SUCCESS', notebooks);
-    } else {
-        ctx.body = serializReuslt('USER_HAS_NOT_CREATED_NOTEBOOK');
-    }
-});
-
-/**
  *  删除用户指定的子笔记
  *  @type {string} type. 0:真实删除 1:将该笔记状态sub_note_status置为0
  *  @subNoteId {string} subNoteId. 子笔记sub_note_id
@@ -146,6 +144,34 @@ router.post('/deleteSubNote', async (ctx, next) => {
         ctx.body = serializReuslt('SUBNOTEBOOK_NOT_EXIT');
     }
 });
+
+/**
+ *  getUserNotes 查找用户的所有的笔记本
+ *  @returns {null} 
+ */
+router.get('/getUserNotes', async (ctx, next) => {
+    const { uuid } = ctx.request.body;
+    // TODO 优化，只需要查SUB_NOTEBOOK_TABLE_NAME表，对数据进行处理即可
+    let notebooks = await notebookController.findNoteBooks(`user_id='${uuid}'`, NOTEBOOK_TABLE_NAME);
+    if (isArray(notebooks)) {
+        const subNotes = await notebookController.findNoteBooks(`user_id='${uuid}'`, SUB_NOTEBOOK_TABLE_NAME);
+        if (isArray(subNotes)) {
+            notebooks = notebooks.map(notebook => {
+                notebook.subNotes = [];
+                subNotes.forEach(subnote => {
+                    if (subnote.notebook_id === notebook.notebook_id) {
+                        notebook.subNotes.push(subnote);
+                    }
+                });
+                return notebook;
+            });
+        }
+        ctx.body = serializReuslt('SUCCESS', notebooks);
+    } else {
+        ctx.body = serializReuslt('USER_HAS_NOT_CREATED_NOTEBOOK');
+    }
+});
+
 /**
  *  获取用户最近一次编辑的子笔记信息
  *  @returns {object} 子笔记数据
@@ -153,6 +179,7 @@ router.post('/deleteSubNote', async (ctx, next) => {
 router.get('/getRecentEditorSubnote', async (ctx, next) => {
     const { uuid } = ctx.request.body;
     let notes = await notebookController.findNoteBooks(`user_id='${uuid}' AND sub_note_exist=1 `, SUB_NOTEBOOK_TABLE_NAME);
+    console.log(notes, '------');
     if (isArray(notes)) {
         notes = notes.sort((prev, next) => prev.sub_note_last_update <= next.sub_note_last_update);
         ctx.body = serializReuslt('SUCCESS', notes[0]);
