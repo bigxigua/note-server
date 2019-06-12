@@ -3,6 +3,8 @@ const { serializReuslt } = require('../util/serializable');
 const fs = require('fs');
 const path = require('path');
 const { hostname, port } = require('../config/server-config');
+const SERVER_PATH = `${hostname}:${port}/img`;
+const UPLOAD_IMG_PATH = path.join(process.cwd(), '../note-static/img');
 
 function asyncFileWriteStreamClose(stream, fileName) {
     return new Promise((resolve) => {
@@ -19,20 +21,19 @@ function asyncFileWriteStreamClose(stream, fileName) {
             console.log(e, '-------error-------');
         });
     });
-}
+};
 
 router.post('/uploadImage', async (ctx, next) => {
     const { files, body } = ctx.request;
     try {
         const { uuid, fileId } = body;
         const { file } = files;
-        const filePath = path.join(__dirname, '../public/upload/') + `/${file.name}`;
         const fileReaderStream = fs.createReadStream(file.path);
-        const fileWriteStream = fs.createWriteStream(filePath);
+        const fileWriteStream = fs.createWriteStream(UPLOAD_IMG_PATH);
         fileReaderStream.pipe(fileWriteStream);
         const sign = await asyncFileWriteStreamClose(fileWriteStream, file.name);
         if (sign) {
-            ctx.body = serializReuslt('SUCCESS', { path: `${hostname}:${port}/upload/${file.name}`, fileId });
+            ctx.body = serializReuslt('SUCCESS', { path: `${SERVER_PATH}/${file.name}`, fileId });
         } else {
             ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
         }
