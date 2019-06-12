@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { hostname, port } = require('../config/server-config');
 const SERVER_PATH = `${hostname}:${port}/img`;
-const UPLOAD_IMG_PATH = path.join(process.cwd(), '../note-static/img');
+const UPLOAD_IMG_PATH = path.join(process.cwd(), '../note-static/img/');
 
 function asyncFileWriteStreamClose(stream, fileName) {
     return new Promise((resolve) => {
