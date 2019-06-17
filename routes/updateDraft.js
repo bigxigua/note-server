@@ -168,7 +168,8 @@ router.get('/getUserNotes', async (ctx, next) => {
         }
         ctx.body = serializReuslt('SUCCESS', notebooks);
     } else {
-        ctx.body = serializReuslt('USER_HAS_NOT_CREATED_NOTEBOOK');
+        // ctx.body = serializReuslt('USER_HAS_NOT_CREATED_NOTEBOOK');
+        ctx.body = serializReuslt('SUCCESS', []);
     }
 });
 

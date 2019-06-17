@@ -8,11 +8,6 @@ const UPLOAD_IMG_PATH = path.join(process.cwd(), '../note-static/img/');
 
 function asyncFileWriteStreamClose(stream, fileName) {
     return new Promise((resolve) => {
-        console.log(fileName);
-        if (fileName === 'avatar_user.jpg') {
-            resolve(false);
-            return;
-        }
         stream.on('close', function (e) {
             resolve(true);
         });
