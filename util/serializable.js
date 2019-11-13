@@ -1,6 +1,6 @@
 const RESULT_CODES = {
     /* 成功状态码 */
-    SUCCESS: create(1, '成功'),
+    SUCCESS: create(200, '成功'),
 
     /* 参数错误：10001-19999 */
     PARAM_IS_INVALID: create(10001, '参数无效'),
@@ -16,7 +16,7 @@ const RESULT_CODES = {
     USER_INVALIDATION_OF_IDENTITY: create(20006, '用户token失效，请重新登陆'),
 
     /* 业务错误：30001-39999 */
-    SPECIFIED_QUESTIONED_USER_NOT_EXIST: create(30001, '某业务出现问题'),
+    SPECIFIED_QUESTIONED_USER_NOT_EXIST: create(30001, '服务开小差啦!请稍后再试'),
 
     /* 系统错误：40001-49999 */
     SYSTEM_INNER_ERROR: create(40001, '系统繁忙，请稍后重试500'),

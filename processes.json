@@ -1,23 +1,23 @@
 {
-    "apps": [
-        {
-            "name": "Note_Server",
-            "script": "./bin/www",
-            "cwd": "./",
-            "watch": [
-                "bin",
-                "config",
-                "controller",
-                "models",
-                "public",
-                "routes",
-                "util",
-                "views",
-                "app.js"
-            ],
-            "error_file": "./logs/app-err.log",
-            "out_file": "./logs/app-out.log",
-            "log_date_format": "YYYY-MM-DD HH:mm Z"
-        }
-    ]
+  "apps": [
+    {
+      "name": "Note_Server",
+      "script": "./bin/www",
+      "cwd": "./",
+      "watch": [
+        "bin",
+        "config",
+        "controller",
+        "models",
+        "public",
+        "routes",
+        "util",
+        "views",
+        "app.js"
+      ],
+      "error_file": "./logs/app-err.log",
+      "out_file": "./logs/app-out.log",
+      "log_date_format": "YYYY-MM-DD HH:mm Z"
+    }
+  ]
 }

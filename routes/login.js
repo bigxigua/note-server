@@ -16,20 +16,21 @@ router.post('/login', async (ctx, next) => {
     let token = ctx.cookies.get('token');
     let uuid = '';
     let userLoginVersion = '';
-    // 自动登陆无token时
-    if (!token && !account && !password) {
-        ctx.body = serializReuslt('USER_NOT_LOGGED_IN');
-        return;
-    }
-    // 自动登陆有token时
-    if (token && !account && !password) {
-        let verifyResult = await jwt.verify(token, JWT_KEY) || {};
-        if (verifyResult.uuid) {
-            uuid = verifyResult.uuid;
-            userLoginVersion = verifyResult.userLoginVersion;
-        }
-    } else {
+    // 是否是使用帐号密码登陆
+    const isActiveLogin = (account && password);
+    // 优先使用用户名+密码进行登陆，若无则使用cookie-token方式
+    // 用户名+密码登陆方式
+    if (isActiveLogin) {
         uuid = fnv.hash(account, 64).str();
+    } else {
+        // token登陆
+        if (token) {
+            let verifyResult = await jwt.verify(token, JWT_KEY) || {};
+            if (verifyResult.uuid) {
+                uuid = verifyResult.uuid;
+                userLoginVersion = verifyResult.userLoginVersion;
+            }
+        }
     }
     if (!uuid) {
         ctx.body = serializReuslt('USER_NOT_LOGGED_IN');
@@ -37,25 +38,22 @@ router.post('/login', async (ctx, next) => {
     }
     let user = await userController.findUser(`uuid='${uuid}'`);
     let isRegisterUser = false;
-    // 比较jwt获取到的userLoginVersion和用户表里的是否一致，如果不一致则token无效
-    if (!user || user.length === 0) {
-        user = await userController.createUser({
-            account,
-            password,
-            uuid,
-            user_login_version: Date.now() + ''
-        });
-        isRegisterUser = true;
+    if (!Array.isArray(user) || user.length === 0) {
+        ctx.body = serializReuslt('USER_LOGIN_ERROR');
+        return;
     }
     if (user && user.length > 0) {
-        if (password && user[0].password !== password) {
+        // 帐号密码登陆时，密码不正确
+        if (isActiveLogin && user[0].password !== password) {
             ctx.body = serializReuslt('USER_LOGIN_ERROR');
             return;
         }
+        // token登陆时，token是伪造
         if (userLoginVersion && userLoginVersion !== user[0].user_login_version) {
             ctx.body = serializReuslt('USER_INVALIDATION_OF_IDENTITY');
             return;
         }
+        // 更新cookie
         token = jwt.sign({
             uuid,
             userLoginVersion: user[0].user_login_version,
@@ -63,8 +61,7 @@ router.post('/login', async (ctx, next) => {
         }, JWT_KEY);
         ctx.cookies.set('token', token, cookieConfig);
         ctx.body = serializReuslt('SUCCESS', {
-            ...user[0],
-            isRegisterUser
+            ...user[0]
         });
     } else {
         ctx.body = serializReuslt('USER_NOT_EXIST');

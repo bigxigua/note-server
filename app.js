@@ -8,6 +8,7 @@ const logger = require('koa-logger');
 const cors = require('koa-cors');
 const updateDraft = require('./routes/updateDraft');
 const login = require('./routes/login');
+const register = require('./routes/register');
 const uploader = require('./routes/uploader');
 const verify = require('./middleware/verify');
 
@@ -48,6 +49,7 @@ app.use(async (ctx, next) => {
 app.use(updateDraft.routes(), updateDraft.allowedMethods());
 app.use(login.routes(), login.allowedMethods());
 app.use(uploader.routes(), uploader.allowedMethods());
+app.use(register.routes(), register.allowedMethods());
 
 // error-handling
 app.on('error', (err, ctx) => {

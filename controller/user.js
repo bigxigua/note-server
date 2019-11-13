@@ -5,6 +5,10 @@ const DEFAULT_USERINFO_PARAMS = {
     nickname: '', // 昵称
     password: '', // 密码
     uuid: '', // uuid
+    avatar_url: '', // 头像
+    created_at: '', // 账户创建时间
+    description: '', // 用户描述
+    type: 'User', // 用户类型 User普通用户 Admin管理员
 }
 module.exports = {
     /**

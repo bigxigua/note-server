@@ -1,14 +1,4 @@
-
-/*
-
- Source Server         : 45.76.98.174
- Source Server Type    : MySQL
- Source Server Version : 100213
- Source Host           : 45.76.98.174:3306
-
- Date: 15/05/2019 11:16:33
-*/
-
+USE note_db;
 -- ----------------------------
 -- Table structure for note_user_info
 -- 用户信息表
@@ -24,15 +14,6 @@ CREATE TABLE `note_user_info` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8;
 
--- CREATE TABLE `note_user_info` (
---   `id` int(11) NOT NULL AUTO_INCREMENT,
---   `account` varchar(20) DEFAULT '',
---   `nickname` varchar(20) DEFAULT '',
---   `password` varchar(20) NOT NULL,
---   `uuid` varchar(200) NOT NULL,
---   `user_login_version` varchar(200) NOT NULL,
---   PRIMARY KEY (`id`)
--- ) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8;
 -- ----------------------------
 -- Table structure for note_notebook
 -- 用户笔记表
