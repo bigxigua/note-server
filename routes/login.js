@@ -10,7 +10,7 @@ const { serializReuslt } = require('../util/serializable');
  *    (1).如果已经注册则验证密码是否正确
  *    (2).如果没有注册创建一个新用户
  */
-router.post('/login', async (ctx, next) => {
+router.post('/login', async (ctx) => {
     // TODO signed cookie
     let { account, password } = ctx.request.body;
     let token = ctx.cookies.get('token');
@@ -33,39 +33,40 @@ router.post('/login', async (ctx, next) => {
         }
     }
     if (!uuid) {
-        ctx.body = serializReuslt('USER_NOT_LOGGED_IN');
+        ctx.body = serializReuslt('USER_INVALIDATION_OF_IDENTITY');
         return;
     }
-    let user = await userController.findUser(`uuid='${uuid}'`);
-    let isRegisterUser = false;
-    if (!Array.isArray(user) || user.length === 0) {
-        ctx.body = serializReuslt('USER_LOGIN_ERROR');
+    let [error, user] = await userController.findUser(`uuid='${uuid}'`);
+    // 系统错误
+    if (error || !user || !Array.isArray(user)) {
+        ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
         return;
     }
-    if (user && user.length > 0) {
-        // 帐号密码登陆时，密码不正确
-        if (isActiveLogin && user[0].password !== password) {
-            ctx.body = serializReuslt('USER_LOGIN_ERROR');
-            return;
-        }
-        // token登陆时，token是伪造
-        if (userLoginVersion && userLoginVersion !== user[0].user_login_version) {
-            ctx.body = serializReuslt('USER_INVALIDATION_OF_IDENTITY');
-            return;
-        }
-        // 更新cookie
-        token = jwt.sign({
-            uuid,
-            userLoginVersion: user[0].user_login_version,
-            exp: Math.floor((new Date().getTime()) / 1000) + 60 * 60 * 24 * 30
-        }, JWT_KEY);
-        ctx.cookies.set('token', token, cookieConfig);
-        ctx.body = serializReuslt('SUCCESS', {
-            ...user[0]
-        });
-    } else {
+    // 用户信息不存在
+    if (user.length === 0) {
         ctx.body = serializReuslt('USER_NOT_EXIST');
+        return;
     }
+    // 密码登陆时，密码不正确
+    if (isActiveLogin && user[0].password !== password) {
+        ctx.body = serializReuslt('USER_PASSWORD_ERROR');
+        return;
+    }
+    // token登陆时，token是伪造
+    if (userLoginVersion && userLoginVersion !== user[0].user_login_version) {
+        ctx.body = serializReuslt('USER_INVALIDATION_OF_IDENTITY');
+        return;
+    }
+    // 更新cookie
+    token = jwt.sign({
+        uuid,
+        userLoginVersion: user[0].user_login_version,
+        exp: Math.floor((new Date().getTime()) / 1000) + 60 * 60 * 24 * 30
+    }, JWT_KEY);
+    ctx.cookies.set('token', token, cookieConfig);
+    ctx.body = serializReuslt('SUCCESS', {
+        ...user[0]
+    });
 });
 /**
  * 退出登陆

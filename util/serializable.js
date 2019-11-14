@@ -8,18 +8,18 @@ const RESULT_CODES = {
     PARAM_NOT_COMPLETE: create(10003, '参数缺失'),
 
     /* 用户错误：20001-29999*/
-    USER_NOT_LOGGED_IN: create(20001, '用户未登录'),
-    USER_LOGIN_ERROR: create(20002, '账号不存在或密码错误'),
-    USER_ACCOUNT_FORBIDDEN: create(20003, '账号已被禁用'),
-    USER_NOT_EXIST: create(20004, '用户不存在'),
-    USER_HAS_EXISTED: create(20005, '用户已存在'),
-    USER_INVALIDATION_OF_IDENTITY: create(20006, '用户token失效，请重新登陆'),
+    USER_NOT_LOGGED_IN: create(20001, '请登录'),
+    USER_FORBIDDEN: create(20002, '账号已被封禁，请联系管理员'),
+    USER_NOT_EXIST: create(20003, '此帐号不存在'),
+    USER_PASSWORD_ERROR: create(20004, '密码不正确，请重新输入'),
+    USER_HAS_EXISTED: create(20005, '此用户已被注册'),
+    USER_INVALIDATION_OF_IDENTITY: create(20006, '身份信息失效，请重新登陆'),
 
     /* 业务错误：30001-39999 */
     SPECIFIED_QUESTIONED_USER_NOT_EXIST: create(30001, '服务开小差啦!请稍后再试'),
 
     /* 系统错误：40001-49999 */
-    SYSTEM_INNER_ERROR: create(40001, '系统繁忙，请稍后重试500'),
+    SYSTEM_INNER_ERROR: create(40001, '服务开小差啦!请稍后再试'),
 
     /* 数据错误：50001-599999 */
     RESULE_DATA_NONE: create(50001, '数据未找到'),

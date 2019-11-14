@@ -1,13 +1,6 @@
 const mysqlBaseModel = require('../models/db-mysql');
-const USER_TABLE_NAME = 'note_user_info';
+const USER_TABLE_NAME = 'user';
 const DEFAULT_USERINFO_PARAMS = {
-    account: '', // 账户
-    nickname: '', // 昵称
-    password: '', // 密码
-    uuid: '', // uuid
-    avatar_url: '', // 头像
-    created_at: '', // 账户创建时间
-    description: '', // 用户描述
     type: 'User', // 用户类型 User普通用户 Admin管理员
 }
 module.exports = {
@@ -38,10 +31,11 @@ module.exports = {
     */
     async findUser(whereSql) {
         try {
-            return mysqlBaseModel.find(USER_TABLE_NAME, whereSql);
+            const data = await mysqlBaseModel.find(USER_TABLE_NAME, whereSql);
+            return [null, data]
         } catch (error) {
             console.log('---------------查找用户信息失败----------------', error);
-            return Promise.resolve([]);
+            return Promise.resolve([error, null]);
         }
     },
     /**

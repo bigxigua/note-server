@@ -10,37 +10,39 @@ const { serializReuslt } = require('../util/serializable');
  *    (1).如果已经注册则验证密码是否正确
  *    (2).如果没有注册创建一个新用户
  */
-router.post('/regster', async (ctx, next) => {
+router.post('/register', async (ctx, next) => {
     let { account, password } = ctx.request.body;
-    let uuid = '';
-    if (account && password) {
-        uuid = fnv.hash(account, 64).str();
-    }
-    if (!uuid) {
+    if (!account || !password) {
         ctx.body = serializReuslt('PARAM_NOT_COMPLETE');
         return;
     }
-    let user = await userController.findUser(`uuid='${uuid}'`);
-    if (!user || user.length === 0) {
+    const uuid = fnv.hash(account, 64).str();
+    let [error, user] = await userController.findUser(`uuid='${uuid}'`);
+    if (error || !user || !Array.isArray(user)) {
+        ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
+        return;
+    }
+    const now = Date.now();
+    if (user.length === 0) {
         user = await userController.createUser({
             account,
             password,
             uuid,
-            user_login_version: Date.now() + ''
+            user_login_version: Date.now() + '',
+            created_at: new Date(now),
+            created_at_timestamp: now
         });
-    }
-    if (user && user.length > 0) {
         token = jwt.sign({
             uuid,
             userLoginVersion: user[0].user_login_version,
-            exp: Math.floor((new Date().getTime()) / 1000) + 60 * 60 * 24 * 30
+            exp: Math.floor(now / 1000) + 60 * 60 * 24 * 30
         }, JWT_KEY);
         ctx.cookies.set('token', token, cookieConfig);
         ctx.body = serializReuslt('SUCCESS', {
           ...user[0],
         });
     } else {
-        ctx.body = serializReuslt('SPECIFIED_QUESTIONED_USER_NOT_EXIST');
+        ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
     }
 });
 
