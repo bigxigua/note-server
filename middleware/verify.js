@@ -9,66 +9,72 @@ const VERIFY_RULES = {
         notEmptyParamsName: [],
         needToVerifyUser: true,
     },
-    updateDraft: {
-        comments: '更新笔记表的数据',
-        methods: 'POST',
-        notEmptyParamsName: ['subNoteId'],
-        needToVerifyUser: true,
-    },
-    createNotebook: {
-        comments: '创建新的笔记本',
-        methods: 'POST',
-        notEmptyParamsName: ['noteBookName'],
-        needToVerifyUser: true,
-    },
-    createSubNotebook: {
-        comments: '创建新的子笔记',
-        methods: 'POST',
-        notEmptyParamsName: ['notebookId', 'subNoteName'],
-        needToVerifyUser: true,
-    },
-    getUserNotes: {
-        comments: '查找用户的所有的笔记本',
+    // 获取用户最近编辑的文档
+    recent: {
         methods: 'GET',
         notEmptyParamsName: [],
-        needToVerifyUser: true,
-    },
-    deleteSubNote: {
-        comments: '删除用户指定的子笔记',
-        methods: 'POST',
-        notEmptyParamsName: ['type', 'subNoteId'],
-        needToVerifyUser: true,
-    },
-    getRecentEditorSubnote: {
-        comments: '获取用户最近编辑的子笔记信息',
-        methods: 'GET',
-        notEmptyParamsName: [],
-        needToVerifyUser: true,
-    },
-    updateSubnoteInfo: {
-        comments: '更新子笔记信息',
-        methods: 'GET',
-        notEmptyParamsName: [],
-        needToVerifyUser: true,
-    },
-    searchSubNote: {
-        comments: '搜索子笔记',
-        methods: 'GET',
-        notEmptyParamsName: ['subNoteName'],
-        needToVerifyUser: true,
-    },
-    uploadImage: {
-        comments: '上传图片',
-        methods: 'POST',
-        notEmptyParamsName: ['fileId'],
-        needToVerifyUser: true,
-    },
-    deleteNotebook: {
-        comments: '删除笔记本',
-        methods: 'POST',
-        notEmptyParamsName: ['noteBookId', 'hasSubNotes'],
         needToVerifyUser: true,
     }
+    // updateDraft: {
+    //     comments: '更新笔记表的数据',
+    //     methods: 'POST',
+    //     notEmptyParamsName: ['subNoteId'],
+    //     needToVerifyUser: true,
+    // },
+    // createNotebook: {
+    //     comments: '创建新的笔记本',
+    //     methods: 'POST',
+    //     notEmptyParamsName: ['noteBookName'],
+    //     needToVerifyUser: true,
+    // },
+    // createSubNotebook: {
+    //     comments: '创建新的子笔记',
+    //     methods: 'POST',
+    //     notEmptyParamsName: ['notebookId', 'subNoteName'],
+    //     needToVerifyUser: true,
+    // },
+    // getUserNotes: {
+    //     comments: '查找用户的所有的笔记本',
+    //     methods: 'GET',
+    //     notEmptyParamsName: [],
+    //     needToVerifyUser: true,
+    // },
+    // deleteSubNote: {
+    //     comments: '删除用户指定的子笔记',
+    //     methods: 'POST',
+    //     notEmptyParamsName: ['type', 'subNoteId'],
+    //     needToVerifyUser: true,
+    // },
+    // getRecentEditorSubnote: {
+    //     comments: '获取用户最近编辑的子笔记信息',
+    //     methods: 'GET',
+    //     notEmptyParamsName: [],
+    //     needToVerifyUser: true,
+    // },
+    // updateSubnoteInfo: {
+    //     comments: '更新子笔记信息',
+    //     methods: 'GET',
+    //     notEmptyParamsName: [],
+    //     needToVerifyUser: true,
+    // },
+    // searchSubNote: {
+    //     comments: '搜索子笔记',
+    //     methods: 'GET',
+    //     notEmptyParamsName: ['subNoteName'],
+    //     needToVerifyUser: true,
+    // },
+    // uploadImage: {
+    //     comments: '上传图片',
+    //     methods: 'POST',
+    //     notEmptyParamsName: ['fileId'],
+    //     needToVerifyUser: true,
+    // },
+    // deleteNotebook: {
+    //     comments: '删除笔记本',
+    //     methods: 'POST',
+    //     notEmptyParamsName: ['noteBookId', 'hasSubNotes'],
+    //     needToVerifyUser: true,
+    // }
 };
 const DEFAULT_VERIFY = {
     comments: '注释', // 注释
@@ -79,7 +85,7 @@ const DEFAULT_VERIFY = {
 module.exports = function () {
     return async function verify(ctx, next) {
         const { cookies, request } = ctx;
-        let token = cookies.get('token');
+        const token = cookies.get('token');
         const url = request.url.split('?')[0].substring(1);
         const method = request.method;
         const { notEmptyParamsName, needToVerifyUser } = VERIFY_RULES[url] || DEFAULT_VERIFY;
@@ -92,12 +98,6 @@ module.exports = function () {
             ctx.body = serializReuslt('USER_NOT_LOGGED_IN');
             return;
         }
-        let { uuid, userLoginVersion } = jwt.verify(token, JWT_KEY) || {};
-        // 用户操作身份验证 -无uuid
-        if (needToVerifyUser && !uuid) {
-            ctx.body = serializReuslt('USER_NOT_EXIST');
-            return;
-        }
         const parameterIsNotValid = notEmptyParamsName.every((key) => {
             const value = request[method === 'POST' ? 'body' : 'query'][key];
             return (typeof value !== 'number' && typeof value !== 'boolean') ? value : true;
@@ -107,12 +107,19 @@ module.exports = function () {
             ctx.body = serializReuslt('PARAM_NOT_COMPLETE');
             return;
         }
-        // 用户登陆身份有效性校验
-        let user = await userController.findUser(`uuid='${uuid}'`);
-        if (!user || !user[0] || user[0].user_login_version !== userLoginVersion) {
-            ctx.body = serializReuslt('USER_INVALIDATION_OF_IDENTITY');
+        const { uuid, userLoginVersion } = jwt.verify(token, JWT_KEY) || {};
+        // 用户操作身份验证 -无uuid
+        if (needToVerifyUser && !uuid) {
+            ctx.body = serializReuslt('USER_NOT_EXIST');
             return;
         }
+        // 获取用户信息失败
+        const [error, user] = await userController.findUser(`uuid='${uuid}'`);
+        if (error || !user || !user[0] || user[0].user_login_version !== userLoginVersion) {
+            ctx.body = serializReuslt('SPECIFIED_QUESTIONED_USER_NOT_EXIST');
+            return;
+        }
+        ctx.request.user = user[0];
         ctx.request.body.uuid = uuid;
         ctx.request.query.uuid = uuid;
         await next();

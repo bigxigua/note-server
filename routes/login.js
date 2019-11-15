@@ -4,6 +4,7 @@ const userController = require('../controller/user');
 const jwt = require('jsonwebtoken');
 const { JWT_KEY, cookieConfig } = require('../config/server-config');
 const { serializReuslt } = require('../util/serializable');
+
 /**
  * login 路由
  * 1. 检测用户是否已经注册过
@@ -68,6 +69,7 @@ router.post('/login', async (ctx) => {
         ...user[0]
     });
 });
+
 /**
  * 退出登陆
  */

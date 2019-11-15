@@ -8,9 +8,9 @@ const RESULT_CODES = {
     PARAM_NOT_COMPLETE: create(10003, '参数缺失'),
 
     /* 用户错误：20001-29999*/
-    USER_NOT_LOGGED_IN: create(20001, '请登录'),
+    USER_NOT_LOGGED_IN: create(20001, '您还未登陆哦，登陆查看更多精彩'),
     USER_FORBIDDEN: create(20002, '账号已被封禁，请联系管理员'),
-    USER_NOT_EXIST: create(20003, '此帐号不存在'),
+    USER_NOT_EXIST: create(20003, '帐号信息不存在，请重新登陆'),
     USER_PASSWORD_ERROR: create(20004, '密码不正确，请重新输入'),
     USER_HAS_EXISTED: create(20005, '此用户已被注册'),
     USER_INVALIDATION_OF_IDENTITY: create(20006, '身份信息失效，请重新登陆'),

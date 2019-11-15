@@ -10,6 +10,7 @@ const updateDraft = require('./routes/updateDraft');
 const login = require('./routes/login');
 const register = require('./routes/register');
 const uploader = require('./routes/uploader');
+const userDocActions = require('./routes/user-doc');
 const verify = require('./middleware/verify');
 
 // error handler
@@ -46,10 +47,12 @@ app.use(async (ctx, next) => {
 });
 
 // routes
-app.use(updateDraft.routes(), updateDraft.allowedMethods());
 app.use(login.routes(), login.allowedMethods());
-app.use(uploader.routes(), uploader.allowedMethods());
 app.use(register.routes(), register.allowedMethods());
+app.use(uploader.routes(), uploader.allowedMethods());
+app.use(updateDraft.routes(), updateDraft.allowedMethods());
+app.use(userDocActions.routes(), userDocActions.allowedMethods());
+
 
 // error-handling
 app.on('error', (err, ctx) => {
