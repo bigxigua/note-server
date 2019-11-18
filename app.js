@@ -10,7 +10,8 @@ const updateDraft = require('./routes/updateDraft');
 const login = require('./routes/login');
 const register = require('./routes/register');
 const uploader = require('./routes/uploader');
-const userDocActions = require('./routes/user-doc');
+const userDocActions = require('./routes/doc');
+const space = require('./routes/space');
 const verify = require('./middleware/verify');
 
 // error handler
@@ -52,7 +53,7 @@ app.use(register.routes(), register.allowedMethods());
 app.use(uploader.routes(), uploader.allowedMethods());
 app.use(updateDraft.routes(), updateDraft.allowedMethods());
 app.use(userDocActions.routes(), userDocActions.allowedMethods());
-
+app.use(space.routes(), space.allowedMethods());
 
 // error-handling
 app.on('error', (err, ctx) => {

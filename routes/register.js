@@ -26,6 +26,7 @@ router.post('/register', async (ctx, next) => {
     if (user.length === 0) {
         user = await userController.createUser({
             account,
+            name: account,
             password,
             uuid,
             user_login_version: Date.now() + '',
