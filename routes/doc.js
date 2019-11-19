@@ -37,20 +37,32 @@ router.post('/create/doc', async (ctx) => {
 });
 
 /**
- * 获取用户最近编辑的文档
+ *  获取用户文档列表
+ *  @type {string} recent=最近编辑 all=获取所有的按照更新时间排序
+ *  @q {string} 搜索条件
+ *  @limit {string} limit
+ *  @returns {Array} 文档列表
  */
-router.get('/doc/recent', async (ctx, next) => {
-	const { user, query: { limit = 10 } } = ctx.request;
+router.get('/docs', async (ctx) => {
+	const { user, query: { limit = 10, type = 'all', uuid = '', q = '' } } = ctx.request;
 	// 查询此前一个月内有修改的。前limit条
 	const interval = 30 * 24 * 60 * 60 * 1000;
 	const time = Date.now() - interval;
-	const [error, data] = await docController.findDocs(`uuid='${user.uuid}' AND updated_at_timestamp>${time} limit ${limit}`);
+	const sqlMapType = {
+		recent: `uuid='${uuid}' ${q ? `AND title LIKE '%${q}%'` : ''} order by updated_at_timestamp DESC limit ${limit}`,
+		all: `uuid='${uuid}' ${q ? `AND title LIKE '%${q}%'` : ''} AND updated_at_timestamp>${time} limit ${limit}`
+	};
+	if (!sqlMapType[type]) {
+		ctx.body = serializReuslt('PARAM_IS_INVALID');
+		return;
+	}
+	const [error, data] = await docController.findDocs(sqlMapType[type]);
 	if (error || !Array.isArray(data)) {
 		ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
 		return;
 	}
 	const getSpaceInfo = async ({ spaceId }) => {
-		const [, d] = await spaceController.findSpace(`uuid='${user.uuid}' AND space_id='${spaceId}'`);
+		const [, d] = await spaceController.findSpace(`uuid='${uuid}' AND space_id='${spaceId}'`);
 		if (Array.isArray(d) && d.length > 0 && d[0]) {
 			return d[0];
 		}
@@ -75,7 +87,7 @@ router.get('/doc/recent', async (ctx, next) => {
 });
 
 /**
- * 查找文档信息
+ * 根据docId查找文档详细信息
  */
 router.get('/doc/detail', async (ctx) => {
 	const { user, query: { doc_id = '' } } = ctx.request;

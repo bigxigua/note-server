@@ -73,20 +73,16 @@ router.post('/login', async (ctx) => {
 /**
  * 退出登陆
  */
-router.post('/outLogin', async (ctx, next) => {
+router.post('/login/out', async (ctx) => {
     const { uuid } = ctx.request.body;
-    let user = await userController.findUser(`uuid='${uuid}'`);
-    if (user && user.length > 0) {
-        let result = await userController.updateUserInfo({
-            user_login_version: Date.now()
-        }, `uuid='${uuid}'`);
-        if (result && result.changedRows > 0) {
-            ctx.body = serializReuslt('SUCCESS', {});
-        } else {
-            ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
-        }
+    let [error, result] = await userController.updateUserInfo({
+        user_login_version: Date.now()
+    }, `uuid='${uuid}'`);
+    console.log(error, result);
+    if (!error && result.changedRows > 0) {
+        ctx.body = serializReuslt('SUCCESS', { STATUS: 'OK' });
     } else {
-        ctx.body = serializReuslt('USER_NOT_EXIST');
+        ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
     }
 })
 

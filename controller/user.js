@@ -45,10 +45,11 @@ module.exports = {
     */
     async updateUserInfo(params, where) {
         try {
-            return mysqlBaseModel.update(USER_TABLE_NAME, params, where);
+            const data = await mysqlBaseModel.update(USER_TABLE_NAME, params, where);
+            return [null, data]
         } catch (error) {
-            console.log('---------------更新笔记失败----------------', error);
-            return Promise.resolve([]);
+            console.log('---------------更新用户信息----------------', error);
+            return Promise.resolve([error, null]);
         }
        
     }

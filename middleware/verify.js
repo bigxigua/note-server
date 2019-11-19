@@ -4,8 +4,8 @@ const jwt = require('jsonwebtoken');
 const userController = require('../controller/user');
 
 const VERIFY_RULES = {
-	'doc/recent': {
-		match: /^doc\/recent(\/)?$/,
+	'docs': {
+		match: /^docs(\/)?$/,
 		methods: 'GET',
 		notEmptyParamsName: [],
 		needToVerifyUser: true,
@@ -43,6 +43,12 @@ const VERIFY_RULES = {
 	'spaces': {
 		match: /^spaces(\/)?$/,
 		methods: 'GET',
+		notEmptyParamsName: [],
+		needToVerifyUser: true,
+	},
+	'login/out': {
+		match: /^login\/out(\/)?$/,
+		methods: 'POST',
 		notEmptyParamsName: [],
 		needToVerifyUser: true,
 	}
@@ -84,7 +90,7 @@ module.exports = function () {
 		// 获取用户信息失败
 		const [error, user] = await userController.findUser(`uuid='${uuid}'`);
 		if (error || !user || !user[0] || user[0].user_login_version !== userLoginVersion) {
-			ctx.body = serializReuslt('SPECIFIED_QUESTIONED_USER_NOT_EXIST');
+			ctx.body = serializReuslt('USER_INVALIDATION_OF_IDENTITY');
 			return;
 		}
 		ctx.request.user = user[0];
