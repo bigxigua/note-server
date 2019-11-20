@@ -44,13 +44,14 @@ router.post('/create/doc', async (ctx) => {
  *  @returns {Array} 文档列表
  */
 router.get('/docs', async (ctx) => {
-	const { user, query: { limit = 10, type = 'all', uuid = '', q = '' } } = ctx.request;
+	const { user, query: { limit = 10, type = 'all', uuid = '', q = '', docId = '' } } = ctx.request;
 	// 查询此前一个月内有修改的。前limit条
 	const interval = 30 * 24 * 60 * 60 * 1000;
 	const time = Date.now() - interval;
 	const sqlMapType = {
 		recent: `uuid='${uuid}' ${q ? `AND title LIKE '%${q}%'` : ''} order by updated_at_timestamp DESC limit ${limit}`,
-		all: `uuid='${uuid}' ${q ? `AND title LIKE '%${q}%'` : ''} AND updated_at_timestamp>${time} limit ${limit}`
+		all: `uuid='${uuid}' ${q ? `AND title LIKE '%${q}%'` : ''} AND updated_at_timestamp>${time} limit ${limit}`,
+		detail: `uuid='${uuid}' AND doc_id='${docId}'`
 	};
 	if (!sqlMapType[type]) {
 		ctx.body = serializReuslt('PARAM_IS_INVALID');
@@ -89,18 +90,18 @@ router.get('/docs', async (ctx) => {
 /**
  * 根据docId查找文档详细信息
  */
-router.get('/doc/detail', async (ctx) => {
-	const { user, query: { doc_id = '' } } = ctx.request;
-	// 查询此前一个月内有修改的。前limit条
-	const [error, data] = await docController.findDocs(`uuid='${user.uuid}' AND doc_id='${doc_id}'`);
-	if (error || !Array.isArray(data) || data.length === 0) {
-		ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
-		return;
-	}
-	ctx.body = serializReuslt('SUCCESS', {
-		...data[0]
-	});
-});
+// router.get('/doc/detail', async (ctx) => {
+// 	const { user, query: { doc_id = '' } } = ctx.request;
+// 	// 查询此前一个月内有修改的。前limit条
+// 	const [error, data] = await docController.findDocs(`uuid='${user.uuid}' AND doc_id='${doc_id}'`);
+// 	if (error || !Array.isArray(data) || data.length === 0) {
+// 		ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
+// 		return;
+// 	}
+// 	ctx.body = serializReuslt('SUCCESS', {
+// 		...data[0]
+// 	});
+// });
 
 /**
  * 更新文档
@@ -115,7 +116,8 @@ router.post('/doc/update', async (ctx) => {
 	};
 	['title', 'markdown', 'html', 'markdown_draft', 'html_draft'].forEach(k => {
 		if (body.hasOwnProperty(k)) {
-			updateParams[k] = body[k].replace(/'/img, "''");
+			// updateParams[k] = body[k].replace(/"/img, '\\"');
+			updateParams[k] = body[k];
 		}
 	});
 	const [error, data] = await docController.updateDoc(updateParams, `uuid='${user.uuid}' AND doc_id='${body.doc_id}'`);

@@ -57,12 +57,13 @@ class BaseMysql {
     }
     // 查
     find(tableName, where) {
-        // where like account='fuck222' and password='1111'
         return this.execute(`SELECT * FROM ${tableName} WHERE ${where};`);
     }
+    // 更新
     update(tableName, params, where) {
         const updateSql = Object.keys(params).reduce((p, v, i) => {
-            const value = typeof params[v] === 'number' ? params[v] : `'${params[v]}'`;
+            console.log(typeof params[v], params[v]);
+            const value = typeof params[v] === 'number' ? params[v] : `"${params[v].toString().replace(/"/img, '\\"')}"`;
             return p + `${v}=${value}${i === Object.keys(params).length - 1 ? '' : ','} `;
         }, '');
         return this.execute(`update ${tableName} SET ${updateSql} WHERE ${where}`);

@@ -40,10 +40,10 @@ router.post('/register', async (ctx, next) => {
         }, JWT_KEY);
         ctx.cookies.set('token', token, cookieConfig);
         ctx.body = serializReuslt('SUCCESS', {
-          ...user[0],
+            ...user[0],
         });
     } else {
-        ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
+        ctx.body = serializReuslt('USER_HAS_EXISTED');
     }
 });
 
