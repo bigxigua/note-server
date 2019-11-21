@@ -1,5 +1,5 @@
 const NODE_ENV = process.env.env;
-const domain = NODE_ENV === 'production' ? '45.76.98.174' : '127.0.0.1';
+const domain = NODE_ENV === 'production' ? '139.196.84.53' : '127.0.0.1';
 
 exports.JWT_KEY = 'TBZ_KEY';
 
