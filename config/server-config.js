@@ -14,4 +14,4 @@ exports.cookieConfig = {
 
 exports.hostname = `http://${domain}`;
 
-exports.port = 7001;
+exports.port = 8080;
