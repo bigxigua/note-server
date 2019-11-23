@@ -114,12 +114,12 @@ router.post('/doc/update', async (ctx) => {
 		draft_update_at: now,
 		updated_at: now
 	};
-	['title', 'markdown', 'html', 'markdown_draft', 'html_draft'].forEach(k => {
+	['title', 'markdown', 'html', 'markdown_draft', 'html_draft', 'title_draft', 'status'].forEach(k => {
 		if (body.hasOwnProperty(k)) {
-			// updateParams[k] = body[k].replace(/"/img, '\\"');
 			updateParams[k] = body[k];
 		}
 	});
+	console.log('updateParams', updateParams);
 	const [error, data] = await docController.updateDoc(updateParams, `uuid='${user.uuid}' AND doc_id='${body.doc_id}'`);
 	if (error || !data) {
 		ctx.body = serializReuslt('SYSTEM_INNER_ERROR');

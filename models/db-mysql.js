@@ -62,7 +62,6 @@ class BaseMysql {
     // 更新
     update(tableName, params, where) {
         const updateSql = Object.keys(params).reduce((p, v, i) => {
-            console.log(typeof params[v], params[v]);
             const value = typeof params[v] === 'number' ? params[v] : `"${params[v].toString().replace(/"/img, '\\"')}"`;
             return p + `${v}=${value}${i === Object.keys(params).length - 1 ? '' : ','} `;
         }, '');
