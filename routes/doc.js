@@ -27,6 +27,7 @@ router.post('/create/doc', async (ctx) => {
 		markdown_draft: '',
 		scene,
 		uuid,
+		status: '1',
 		doc_id: docId
 	});
 	if (error || !data) {
@@ -48,9 +49,13 @@ router.get('/docs', async (ctx) => {
 	// 查询此前一个月内有修改的。前limit条
 	const interval = 30 * 24 * 60 * 60 * 1000;
 	const time = Date.now() - interval;
+	// 'markdown_draft', 'html_draft', 'title_draft'
 	const sqlMapType = {
 		recent: `uuid='${uuid}' ${q ? `AND title LIKE '%${q}%'` : ''} order by updated_at_timestamp DESC limit ${limit}`,
-		all: `uuid='${uuid}' ${q ? `AND title LIKE '%${q}%'` : ''} AND updated_at_timestamp>${time} limit ${limit}`,
+		all: `uuid='${uuid}' ${q ? `AND title LIKE '%${q}%'` : ''} limit ${limit}`,
+		updated: `uuid='${uuid}' ${q ? `AND title LIKE '%${q}%'` : ''} AND title_draft='' AND markdown_draft='' AND status='1' limit ${limit}`,
+		un_updated: `uuid='${uuid}' ${q ? `AND title LIKE '%${q}%'` : ''} AND title_draft!='' OR markdown_draft!='' AND status='1' limit ${limit}`,
+		delete: `uuid='${uuid}' ${q ? `AND title LIKE '%${q}%'` : ''} AND status='0' limit ${limit}`,
 		detail: `uuid='${uuid}' AND doc_id='${docId}'`
 	};
 	if (!sqlMapType[type]) {
@@ -139,6 +144,19 @@ router.get('/space/docs', async (ctx) => {
 		return;
 	}
 	ctx.body = serializReuslt('SUCCESS', data);
+});
+
+/**
+ * 删除文档
+ */
+router.post('/doc/delete', async (ctx) => {
+	const { body: { doc_id = '', uuid } } = ctx.request;
+	const [error, data] = await docController.deleteDoc(`uuid='${uuid}' AND doc_id='${doc_id}'`);
+	if (!error && data && data.affectedRows > 0) {
+		ctx.body = serializReuslt('SUCCESS', { STATUS: 'OK' });
+	} else {
+		ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
+	}
 });
 
 

@@ -38,4 +38,18 @@ module.exports = {
 			return [error, null];
 		}
 	},
+	/**
+* 真实删除一个笔记.
+* @param {string} params.
+* @returns {object} 笔记数据
+*/
+	async deleteDoc(where) {
+		try {
+			const result = await mysqlBaseModel.delete(TABLE_NAME, where);
+			return [null, result]
+		} catch (error) {
+			console.log('---------------删除文档失败----------------', error);
+			return [error, null];
+		}
+	},
 }

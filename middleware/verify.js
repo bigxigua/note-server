@@ -28,6 +28,12 @@ const VERIFY_RULES = {
 		notEmptyParamsName: ['doc_id'],
 		needToVerifyUser: true,
 	},
+	'doc/delete': {
+		match: /^doc\/delete(\/)?$/,
+		methods: 'POST',
+		notEmptyParamsName: ['doc_id'],
+		needToVerifyUser: true,
+	},
 	'space/docs': {
 		match: /^space\/docs(\/)?$/,
 		methods: 'GET',
