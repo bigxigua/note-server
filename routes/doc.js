@@ -46,12 +46,10 @@ router.post('/create/doc', async (ctx) => {
  */
 router.get('/docs', async (ctx) => {
 	const { user, query: { limit = 10, type = 'all', uuid = '', q = '', docId = '' } } = ctx.request;
-	// 查询此前一个月内有修改的。前limit条
-	const interval = 30 * 24 * 60 * 60 * 1000;
-	const time = Date.now() - interval;
-	// 'markdown_draft', 'html_draft', 'title_draft'
+	// const interval = 30 * 24 * 60 * 60 * 1000;
+	// const time = Date.now() - interval;
 	const sqlMapType = {
-		recent: `uuid='${uuid}' ${q ? `AND title LIKE '%${q}%'` : ''} order by updated_at_timestamp DESC limit ${limit}`,
+		// recent: `uuid='${uuid}' ${q ? `AND title LIKE '%${q}%'` : ''} order by updated_at_timestamp DESC limit ${limit}`,
 		all: `uuid='${uuid}' ${q ? `AND title LIKE '%${q}%'` : ''} limit ${limit}`,
 		updated: `uuid='${uuid}' ${q ? `AND title LIKE '%${q}%'` : ''} AND title_draft='' AND markdown_draft='' AND status='1' limit ${limit}`,
 		un_updated: `uuid='${uuid}' ${q ? `AND title LIKE '%${q}%'` : ''} AND title_draft!='' OR markdown_draft!='' AND status='1' limit ${limit}`,
@@ -91,22 +89,6 @@ router.get('/docs', async (ctx) => {
 	}
 	ctx.body = serializReuslt('SUCCESS', data);
 });
-
-/**
- * 根据docId查找文档详细信息
- */
-// router.get('/doc/detail', async (ctx) => {
-// 	const { user, query: { doc_id = '' } } = ctx.request;
-// 	// 查询此前一个月内有修改的。前limit条
-// 	const [error, data] = await docController.findDocs(`uuid='${user.uuid}' AND doc_id='${doc_id}'`);
-// 	if (error || !Array.isArray(data) || data.length === 0) {
-// 		ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
-// 		return;
-// 	}
-// 	ctx.body = serializReuslt('SUCCESS', {
-// 		...data[0]
-// 	});
-// });
 
 /**
  * 更新文档
@@ -158,6 +140,5 @@ router.post('/doc/delete', async (ctx) => {
 		ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
 	}
 });
-
 
 module.exports = router;

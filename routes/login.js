@@ -65,6 +65,10 @@ router.post('/login', async (ctx) => {
         exp: Math.floor((new Date().getTime()) / 1000) + 60 * 60 * 24 * 30
     }, JWT_KEY);
     ctx.cookies.set('token', token, cookieConfig);
+    const result = user[0];
+    delete result.password;
+    delete result.id;
+    delete result.user_login_version;
     ctx.body = serializReuslt('SUCCESS', {
         ...user[0]
     });

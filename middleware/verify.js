@@ -34,6 +34,18 @@ const VERIFY_RULES = {
 		notEmptyParamsName: ['doc_id'],
 		needToVerifyUser: true,
 	},
+	'add/recent': {
+		match: /^add\/recent(\/)?$/,
+		methods: 'GET',
+		notEmptyParamsName: ['type'],
+		needToVerifyUser: true,
+	},
+	'recents': {
+		match: /^recents(\/)?$/,
+		methods: 'GET',
+		notEmptyParamsName: [],
+		needToVerifyUser: true,
+	},
 	'space/docs': {
 		match: /^space\/docs(\/)?$/,
 		methods: 'GET',
@@ -57,7 +69,13 @@ const VERIFY_RULES = {
 		methods: 'POST',
 		notEmptyParamsName: [],
 		needToVerifyUser: true,
-	}
+	},
+	// 'upload/image': {
+	// 	match: /^upload\/image(\/)?$/,
+	// 	methods: 'POST',
+	// 	notEmptyParamsName: [],
+	// 	needToVerifyUser: true,
+	// }
 };
 module.exports = function () {
 	return async function verify(ctx, next) {

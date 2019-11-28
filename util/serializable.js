@@ -22,7 +22,7 @@ const RESULT_CODES = {
     SYSTEM_INNER_ERROR: create(40001, '服务开小差啦!请稍后再试'),
 
     /* 数据错误：50001-599999 */
-    RESULE_DATA_NONE: create(50001, '数据未找到'),
+    RESULE_DATA_NONE: create(50001, '数据为空'),
     DATA_IS_WRONG: create(50002, '数据有误'),
     DATA_ALREADY_EXISTED: create(50003, '数据已存在'),
     DATA_CREATE_FAILED: create(50004, '数据创建失败'),

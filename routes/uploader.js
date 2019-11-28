@@ -4,12 +4,11 @@ const fs = require('fs');
 const path = require('path');
 const { hostname, port } = require('../config/server-config');
 const SERVER_PATH = `${hostname}:${port}/img`;
-// const UPLOAD_IMG_PATH = path.join(process.cwd(), '../note-static/img/');
-const UPLOAD_IMG_PATH = path.join(process.cwd(), './pu');
+// const UPLOAD_IMG_PATH = path.join(process.cwd(), './public/upload/');
 
-function asyncFileWriteStreamClose(stream, fileName) {
+function asyncFileWriteStreamClose(stream) {
     return new Promise((resolve) => {
-        stream.on('close', function (e) {
+        stream.on('close', function () {
             resolve(true);
         });
         stream.on('error', function (e) {
@@ -19,17 +18,17 @@ function asyncFileWriteStreamClose(stream, fileName) {
     });
 };
 
-router.post('/uploadImage', async (ctx, next) => {
+router.post('/upload/image', async (ctx, next) => {
     const { files, body } = ctx.request;
     try {
-        const { uuid, fileId } = body;
+        const { fileId } = body;
         const { file } = files;
         const fileReaderStream = fs.createReadStream(file.path);
-        console.log('---UPLOAD_IMG_PATH----', UPLOAD_IMG_PATH, file.path);
-        const fileWriteStream = fs.createWriteStream(UPLOAD_IMG_PATH);
+        const filePath = path.join(__dirname, '../upload/') + `/${file.name}`;
+        const fileWriteStream = fs.createWriteStream(filePath);
         fileReaderStream.pipe(fileWriteStream);
-        const sign = await asyncFileWriteStreamClose(fileWriteStream, file.name);
-        if (sign) {
+        const success = await asyncFileWriteStreamClose(fileWriteStream, file.name);
+        if (success) {
             ctx.body = serializReuslt('SUCCESS', { path: `${SERVER_PATH}/${file.name}`, fileId });
         } else {
             ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
