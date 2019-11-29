@@ -1,9 +1,12 @@
 const router = require('koa-router')();
 const docController = require('../controller/doc');
+const CreateMysqlModel = require('../controller/sqlController');
 const spaceController = require('../controller/space');
 const { serializReuslt } = require('../util/serializable');
 const { hostname } = require('../config/server-config');
 const fnv = require('fnv-plus');
+
+const model = CreateMysqlModel('doc');
 
 /**
  * 创建一个空间
@@ -45,22 +48,22 @@ router.post('/create/doc', async (ctx) => {
  *  @returns {Array} 文档列表
  */
 router.get('/docs', async (ctx) => {
-	const { user, query: { limit = 10, type = 'all', uuid = '', q = '', docId = '' } } = ctx.request;
-	// const interval = 30 * 24 * 60 * 60 * 1000;
-	// const time = Date.now() - interval;
+	const { user, query: { pageNo = 1, pageSize = 300, type = 'all', uuid = '', q = '', docId = '' } } = ctx.request;
+	const commonSql = `uuid='${uuid}'${q ? ` AND title LIKE '%${q}%'` : ' '}`;
+	const pageSql = `limit ${(pageNo-1)*pageSize},${pageSize}`;
+	const orderSql = `ORDER BY id ASC`;
 	const sqlMapType = {
-		// recent: `uuid='${uuid}' ${q ? `AND title LIKE '%${q}%'` : ''} order by updated_at_timestamp DESC limit ${limit}`,
-		all: `uuid='${uuid}' ${q ? `AND title LIKE '%${q}%'` : ''} limit ${limit}`,
-		updated: `uuid='${uuid}' ${q ? `AND title LIKE '%${q}%'` : ''} AND title_draft='' AND markdown_draft='' AND status='1' limit ${limit}`,
-		un_updated: `uuid='${uuid}' ${q ? `AND title LIKE '%${q}%'` : ''} AND title_draft!='' OR markdown_draft!='' AND status='1' limit ${limit}`,
-		delete: `uuid='${uuid}' ${q ? `AND title LIKE '%${q}%'` : ''} AND status='0' limit ${limit}`,
+		all: `${commonSql}${orderSql} ${pageSql}`,
+		updated: `${commonSql}AND title_draft='' AND markdown_draft='' AND status='1' ${pageSql}`,
+		un_updated: `${commonSql}AND title_draft!='' OR markdown_draft!='' AND status='1' ${pageSql}`,
+		delete: `${commonSql}AND status='0' ${pageSql}`,
 		detail: `uuid='${uuid}' AND doc_id='${docId}'`
 	};
 	if (!sqlMapType[type]) {
 		ctx.body = serializReuslt('PARAM_IS_INVALID');
 		return;
 	}
-	const [error, data] = await docController.findDocs(sqlMapType[type]);
+	const [error, data] = await model.find(sqlMapType[type]);
 	if (error || !Array.isArray(data)) {
 		ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
 		return;

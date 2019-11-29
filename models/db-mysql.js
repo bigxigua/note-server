@@ -24,7 +24,7 @@ class BaseMysql {
         });
     }
     execute(sql, params = {}) {
-        // console.log('----------------sql-----------------------', sql);
+        console.log('----------------sql-----------------------', sql);
         return new Promise((resolve, reject) => {
             this.pool.getConnection((error, connection) => {
                 if (error) {
@@ -80,5 +80,4 @@ class BaseMysql {
         return this.execute(sql, values);
     }
 }
-
 module.exports = new BaseMysql();
