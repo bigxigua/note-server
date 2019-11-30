@@ -6,7 +6,8 @@ const { serializReuslt } = require('../util/serializable');
 const { hostname } = require('../config/server-config');
 const fnv = require('fnv-plus');
 
-const model = CreateMysqlModel('doc');
+const docModel = CreateMysqlModel('doc');
+const spaceModel = CreateMysqlModel('space');
 
 /**
  * 创建一个空间
@@ -63,7 +64,7 @@ router.get('/docs', async (ctx) => {
 		ctx.body = serializReuslt('PARAM_IS_INVALID');
 		return;
 	}
-	const [error, data] = await model.find(sqlMapType[type]);
+	const [error, data] = await docModel.find(sqlMapType[type]);
 	if (error || !Array.isArray(data)) {
 		ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
 		return;
@@ -123,12 +124,20 @@ router.post('/doc/update', async (ctx) => {
  */
 router.get('/space/docs', async (ctx) => {
 	const { query: { space_id = '', uuid } } = ctx.request;
-	const [error, data] = await docController.findDocs(`uuid='${uuid}' AND space_id='${space_id}'`);
-	if (error || !Array.isArray(data) || data.length === 0) {
+	const [, space] = await spaceModel.find(`uuid='${uuid}' AND space_id='${space_id}'`);
+	if (!Array.isArray(space) || space.length === 0) {
 		ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
 		return;
 	}
-	ctx.body = serializReuslt('SUCCESS', data);
+	const [error, data] = await docController.findDocs(`uuid='${uuid}' AND space_id='${space_id}' limit 300`);
+	if (error || !Array.isArray(data)) {
+		ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
+		return;
+	}
+	ctx.body = serializReuslt('SUCCESS', {
+		docs: data,
+		space: space[0]
+	});
 });
 
 /**
