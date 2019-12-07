@@ -64,6 +64,12 @@ const VERIFY_RULES = {
 		notEmptyParamsName: [],
 		needToVerifyUser: true,
 	},
+	'spaces/update': {
+		match: /^spaces\/update(\/)?$/,
+		methods: 'POST',
+		notEmptyParamsName: ['space_id', 'catalog'],
+		needToVerifyUser: true,
+	},
 	'login/out': {
 		match: /^login\/out(\/)?$/,
 		methods: 'POST',

@@ -14,16 +14,16 @@ function CreateMysqlModel(table) {
   return {
     mysqlBaseModel,
     find(sql) {
-      return tryCatchWrapper(async () => {return mysqlBaseModel.find(table, sql)});
+      return tryCatchWrapper(async () => { return mysqlBaseModel.find(table, sql) });
     },
     create(payload) {
-      return tryCatchWrapper(async () => {return mysqlBaseModel.insert(table, payload)});
+      return tryCatchWrapper(async () => { return mysqlBaseModel.insert(table, payload) });
     },
     update(params, where) {
-      return tryCatchWrapper(async () => {return mysqlBaseModel.update(table, params, where)});
+      return tryCatchWrapper(async () => { return mysqlBaseModel.update(table, params, where) });
     },
     delete(where) {
-      return tryCatchWrapper(async () => {return mysqlBaseModel.delete(table, where)});
+      return tryCatchWrapper(async () => { return mysqlBaseModel.delete(table, where) });
     },
   }
 }

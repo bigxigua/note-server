@@ -2,22 +2,50 @@ const router = require('koa-router')();
 const docController = require('../controller/doc');
 const CreateMysqlModel = require('../controller/sqlController');
 const spaceController = require('../controller/space');
-const { serializReuslt } = require('../util/serializable');
+const { serializReuslt, handleCustomError } = require('../util/serializable');
 const { hostname } = require('../config/server-config');
 const fnv = require('fnv-plus');
-
+const { getIn } = require('../util/util');
 const docModel = CreateMysqlModel('doc');
 const spaceModel = CreateMysqlModel('space');
 
 /**
- * 创建一个空间
+ * 创建一个文档
  */
 router.post('/create/doc', async (ctx) => {
 	const { body } = ctx.request;
 	const { space_id, title, scene, uuid } = body;
 	const now = new Date();
 	const docId = fnv.hash(`${space_id}-${uuid}-${now}`, 64).str();
-	const [error, data] = await docController.createDoc({
+	const [, spaceInfo] = await spaceModel.find(`uuid='${uuid}' AND space_id='${space_id}'`);
+	if (!Array.isArray(spaceInfo) || !spaceInfo[0] || !spaceInfo[0].catalog) {
+		ctx.body = handleCustomError({
+			message: '未查找到空间信息'
+		});
+		return;
+	}
+	const catalog = JSON.parse(getIn(spaceInfo, [0, 'catalog'], '[]'));
+	if (!Array.isArray(catalog) || catalog.length === 0) {
+		ctx.body = handleCustomError({
+			message: '目录信息有误，请另选空间'
+		});
+		return;
+	}
+	const [, result] = await spaceModel.update({
+		catalog: JSON.stringify([...catalog, {
+			docId,
+			title,
+			level: 0,
+			type: 'DOC'
+		}])
+	}, `uuid='${uuid}' AND space_id='${space_id}'`);
+	if (!getIn(result, ['changedRows'])) {
+		ctx.body = handleCustomError({
+			message: '更新目录失败，请重试'
+		});
+		return;
+	}
+	const [error, data] = await docModel.create({
 		space_id,
 		updated_at: now,
 		updated_at_timestamp: now.getTime(),
@@ -38,6 +66,7 @@ router.post('/create/doc', async (ctx) => {
 		ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
 		return;
 	}
+	// 新增完之后更新space的catalog字段
 	ctx.body = serializReuslt('SUCCESS', { docId });
 });
 
@@ -51,7 +80,7 @@ router.post('/create/doc', async (ctx) => {
 router.get('/docs', async (ctx) => {
 	const { user, query: { pageNo = 1, pageSize = 300, type = 'all', uuid = '', q = '', docId = '' } } = ctx.request;
 	const commonSql = `uuid='${uuid}'${q ? ` AND title LIKE '%${q}%'` : ' '}`;
-	const pageSql = `limit ${(pageNo-1)*pageSize},${pageSize}`;
+	const pageSql = `limit ${(pageNo - 1) * pageSize},${pageSize}`;
 	const orderSql = `ORDER BY id ASC`;
 	const sqlMapType = {
 		all: `${commonSql}${orderSql} ${pageSql}`,
