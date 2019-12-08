@@ -1,14 +1,16 @@
 const router = require('koa-router')();
-const recentController = require('../controller/recent');
-const docController = require('../controller/doc');
-const spaceController = require('../controller/space');
 const { serializReuslt } = require('../util/serializable');
+const CreateMysqlModel = require('../controller/sqlController');
+
+const recentModel = CreateMysqlModel('recent');
+const docModel = CreateMysqlModel('doc');
+const spaceModel = CreateMysqlModel('space');
 
 /**
  * 新增最新使用文档
  */
-router.get('/add/recent', async (ctx) => {
-	const { query: { type = '', uuid, doc_id = '', space_id = '' } } = ctx.request;
+router.post('/add/recent', async (ctx) => {
+	const { body: { type = '', uuid, doc_id = '', space_id = '' } } = ctx.request;
 	const params = {
 		uuid,
 		doc_id,
@@ -16,7 +18,7 @@ router.get('/add/recent', async (ctx) => {
 		type,
 		created_at: Date.now(),
 	};
-	const [error, data] = await recentController.createRecent(params);
+	const [error, data] = await recentModel.create(params);
 	if (!error && data && data.affectedRows > 0) {
 		ctx.body = serializReuslt('SUCCESS', { STATUS: 'OK' });
 	} else {
@@ -28,8 +30,8 @@ router.get('/add/recent', async (ctx) => {
  * 获取最近使用列表
  */
 router.get('/recents', async (ctx) => {
-	const { query: { uuid, limit = 10 } } = ctx.request;
-	const [error, data] = await recentController.findRecent(`uuid='${uuid}' order by created_at DESC limit ${limit}`);
+	const { query: { uuid, limit = 10 }, user } = ctx.request;
+	const [error, data] = await recentModel.find(`uuid='${uuid}' order by created_at DESC limit ${limit}`);
 	if (error || !Array.isArray(data)) {
 		ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
 		return;
@@ -39,7 +41,7 @@ router.get('/recents', async (ctx) => {
 		return;
 	}
 	const queryDoc = async ({ docId, id }) => {
-		const [, d] = await docController.findDocs(`uuid='${uuid}' AND doc_id='${docId}'`);
+		const [, d] = await docModel.find(`uuid='${uuid}' AND doc_id='${docId}'`);
 		if (Array.isArray(d) && d.length > 0 && d[0]) {
 			return {
 				...d[0],
@@ -49,7 +51,7 @@ router.get('/recents', async (ctx) => {
 		return null;
 	}
 	const querySpace = async ({ spaceId, id }) => {
-		const [, d] = await spaceController.findSpace(`uuid='${uuid}' AND space_id='${spaceId}'`);
+		const [, d] = await spaceModel.find(`uuid='${uuid}' AND space_id='${spaceId}'`);
 		if (Array.isArray(d) && d.length > 0 && d[0]) {
 			return {
 				...d[0],
@@ -78,6 +80,7 @@ router.get('/recents', async (ctx) => {
 		data.map(p => {
 			p.doc = docs.filter(i => (i.doc_id === p.doc_id && i.tt === p.id))[0] || {};
 			p.space = spaces.filter(i => (i.space_id === p.space_id && i.tt === p.id))[0] || {};
+			p.user = user;
 			return p;
 		});
 	}

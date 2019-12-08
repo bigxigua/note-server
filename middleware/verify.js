@@ -36,7 +36,7 @@ const VERIFY_RULES = {
 	},
 	'add/recent': {
 		match: /^add\/recent(\/)?$/,
-		methods: 'GET',
+		methods: 'POST',
 		notEmptyParamsName: ['type'],
 		needToVerifyUser: true,
 	},

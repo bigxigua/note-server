@@ -20,6 +20,19 @@ CREATE TABLE `user` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+-- 创建最近使用表
+USE `note_db`;
+DROP TABLE IF EXISTS `note_db`.`recent`;
+CREATE TABLE `recent` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '主键、自增',
+  `type` varchar(100) NOT NULL COMMENT '消息类型,Edit|CreateEdit|CreateSpace|UpdateEdit|UpdateSpace|DeleteEdit|DeleteSpace|Share',
+  `created_at` varchar(100) NOT NULL COMMENT '上次更新时间值',
+  `uuid` varchar(100) NOT NULL COMMENT '用户uuid',
+  `space_id` varchar(200) DEFAULT '' COMMENT '空间唯一id',
+  `doc_id` varchar(200) DEFAULT '' COMMENT '文档唯一id',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 -- 创建空间表
 USE `note_db`;
 DROP TABLE IF EXISTS `note_db`.`space`;
