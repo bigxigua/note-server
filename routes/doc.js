@@ -34,7 +34,6 @@ router.post('/create/doc', async (ctx) => {
 	const [, result] = await spaceModel.update({
 		catalog: JSON.stringify([...catalog, {
 			docId,
-			title,
 			level: 0,
 			type: 'DOC'
 		}])
@@ -78,8 +77,18 @@ router.post('/create/doc', async (ctx) => {
  *  @returns {Array} 文档列表
  */
 router.get('/docs', async (ctx) => {
-	const { user, query: { pageNo = 1, pageSize = 300, type = 'all', uuid = '', q = '', docId = '' } } = ctx.request;
-	const commonSql = `uuid='${uuid}'${q ? ` AND title LIKE '%${q}%'` : ' '}`;
+	const {
+		user,
+		query: {
+			pageNo = 1,
+			pageSize = 300,
+			type = 'all',
+			uuid = '',
+			q = '',
+			docId = ''
+		}
+	} = ctx.request;
+	const commonSql = `uuid='${uuid}'${q ? ` AND title LIKE '%${decodeURIComponent(q)}%'` : ' '}`;
 	const pageSql = `limit ${(pageNo - 1) * pageSize},${pageSize}`;
 	const orderSql = `ORDER BY id ASC`;
 	const sqlMapType = {
