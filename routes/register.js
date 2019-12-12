@@ -2,7 +2,7 @@ const router = require('koa-router')();
 const fnv = require('fnv-plus');
 const userController = require('../controller/user');
 const jwt = require('jsonwebtoken');
-const { JWT_KEY, cookieConfig } = require('../config/server-config');
+const { JWT_KEY, PASSWORD_FNV_SALT, cookieConfig } = require('../config/server-config');
 const { serializReuslt } = require('../util/serializable');
 /**
  * login 路由
@@ -24,10 +24,12 @@ router.post('/register', async (ctx, next) => {
     }
     const now = Date.now();
     if (user.length === 0) {
+        // TODO rsa加密password
+        console.log('----------------', fnv.hash(`${password}-${PASSWORD_FNV_SALT}`, 128).str().length);
         user = await userController.createUser({
             account,
             name: account,
-            password,
+            password: fnv.hash(`${password}-${PASSWORD_FNV_SALT}`, 128).str(),
             uuid,
             user_login_version: Date.now() + '',
             created_at: new Date(now),

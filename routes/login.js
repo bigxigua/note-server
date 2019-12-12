@@ -2,7 +2,7 @@ const router = require('koa-router')();
 const fnv = require('fnv-plus');
 const userController = require('../controller/user');
 const jwt = require('jsonwebtoken');
-const { JWT_KEY, cookieConfig } = require('../config/server-config');
+const { JWT_KEY, PASSWORD_FNV_SALT, cookieConfig } = require('../config/server-config');
 const { serializReuslt } = require('../util/serializable');
 
 /**
@@ -49,7 +49,7 @@ router.post('/login', async (ctx) => {
         return;
     }
     // 密码登陆时，密码不正确
-    if (isActiveLogin && user[0].password !== password) {
+    if (isActiveLogin && user[0].password !== `${fnv.hash(`${password}-${PASSWORD_FNV_SALT}`)}`) {
         ctx.body = serializReuslt('USER_PASSWORD_ERROR');
         return;
     }
