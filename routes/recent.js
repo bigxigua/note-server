@@ -1,6 +1,7 @@
 const router = require('koa-router')();
 const { serializReuslt } = require('../util/serializable');
 const CreateMysqlModel = require('../controller/sqlController');
+const { getIn } = require('../util/util');
 
 const recentModel = CreateMysqlModel('recent');
 const docModel = CreateMysqlModel('doc');
@@ -11,6 +12,13 @@ const spaceModel = CreateMysqlModel('space');
  */
 router.post('/add/recent', async (ctx) => {
 	const { body: { type = '', uuid, doc_id = '', space_id = '' } } = ctx.request;
+	// 查找是否已经存在记录了，就删除该记录
+	const sql = `uuid='${uuid}' AND type='${type}' AND doc_id='${doc_id}' AND space_id='${space_id}'`;
+	const [, recentInfo] = await recentModel.find(sql);
+	if (getIn(recentInfo, [0, 'id'])) {
+		// 删除操作
+		await recentModel.delete(sql);
+	}
 	const params = {
 		uuid,
 		doc_id,
@@ -19,6 +27,20 @@ router.post('/add/recent', async (ctx) => {
 		created_at: Date.now(),
 	};
 	const [error, data] = await recentModel.create(params);
+	if (!error && data && data.affectedRows > 0) {
+		ctx.body = serializReuslt('SUCCESS', { STATUS: 'OK' });
+	} else {
+		ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
+	}
+});
+
+/**
+ * 物理删除最新使用文档
+ */
+router.post('/delete/recent', async (ctx) => {
+	const { body: { uuid, id } } = ctx.request;
+	const [error, data] = await recentModel.delete(`uuid='${uuid}' AND id=${parseInt(id)}`);
+	console.log(error, data);
 	if (!error && data && data.affectedRows > 0) {
 		ctx.body = serializReuslt('SUCCESS', { STATUS: 'OK' });
 	} else {

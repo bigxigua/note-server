@@ -24,8 +24,6 @@ router.post('/register', async (ctx, next) => {
     }
     const now = Date.now();
     if (user.length === 0) {
-        // TODO rsa加密password
-        console.log('----------------', fnv.hash(`${password}-${PASSWORD_FNV_SALT}`, 128).str().length);
         user = await userController.createUser({
             account,
             name: account,
@@ -35,6 +33,11 @@ router.post('/register', async (ctx, next) => {
             created_at: new Date(now),
             created_at_timestamp: now
         });
+        if (user.length === 0) {
+            ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
+            return;
+        }
+        console.log('----------------', user);
         token = jwt.sign({
             uuid,
             userLoginVersion: user[0].user_login_version,

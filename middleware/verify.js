@@ -40,6 +40,12 @@ const VERIFY_RULES = {
 		notEmptyParamsName: ['type'],
 		needToVerifyUser: true,
 	},
+	'delete/recent': {
+		match: /^delete\/recent(\/)?$/,
+		methods: 'POST',
+		notEmptyParamsName: ['id'],
+		needToVerifyUser: true,
+	},
 	'recents': {
 		match: /^recents(\/)?$/,
 		methods: 'GET',
