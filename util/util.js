@@ -8,9 +8,11 @@ module.exports = {
 			});
 		})
 	},
+	// 是数组且长度大于1
 	isArray: (list) => {
 		return Array.isArray(list) && list.length > 0;
 	},
+	// 防空取参
 	getIn: (data, array, initial = null) => {
 		let obj = Object.assign({}, data);
 		for (let i = 0; i < array.length; i++) {
@@ -24,5 +26,12 @@ module.exports = {
 			return initial;
 		}
 		return obj;
+	},
+	getSafeUserInfo: (user) => {
+		const result = { ...user };
+		delete result.id;
+		delete result.password;
+		delete result.user_login_version;
+		return result;
 	}
 }

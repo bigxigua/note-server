@@ -1,7 +1,7 @@
 const router = require('koa-router')();
 const { serializReuslt } = require('../util/serializable');
 const CreateMysqlModel = require('../controller/sqlController');
-const { getIn } = require('../util/util');
+const { getIn, getSafeUserInfo } = require('../util/util');
 
 const recentModel = CreateMysqlModel('recent');
 const docModel = CreateMysqlModel('doc');
@@ -101,7 +101,7 @@ router.get('/recents', async (ctx) => {
 		data.map(p => {
 			p.doc = docs.filter(i => (i.doc_id === p.doc_id && i.tt === p.id))[0] || {};
 			p.space = spaces.filter(i => (i.space_id === p.space_id && i.tt === p.id))[0] || {};
-			p.user = user;
+			p.user = getSafeUserInfo(user);
 			return p;
 		});
 	}
