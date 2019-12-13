@@ -40,7 +40,6 @@ router.post('/add/recent', async (ctx) => {
 router.post('/delete/recent', async (ctx) => {
 	const { body: { uuid, id } } = ctx.request;
 	const [error, data] = await recentModel.delete(`uuid='${uuid}' AND id=${parseInt(id)}`);
-	console.log(error, data);
 	if (!error && data && data.affectedRows > 0) {
 		ctx.body = serializReuslt('SUCCESS', { STATUS: 'OK' });
 	} else {
@@ -58,7 +57,6 @@ router.get('/recents', async (ctx) => {
 		ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
 		return;
 	}
-	// TODO 查找recent表
 	if (data.length === 0) {
 		ctx.body = serializReuslt('RESULE_DATA_NONE');
 		return;
@@ -87,7 +85,7 @@ router.get('/recents', async (ctx) => {
 	const querySpaceQueuss = [];
 	data.forEach(n => {
 		const { type, space_id, doc_id, id } = n;
-		if (['Edit', 'CreateEdit', 'UpdateEdit', 'DeleteEdit', 'Share'].includes(type)) {
+		if (['Edit', 'CreateEdit', 'UpdateEdit', 'LogicalDeleteEdit', 'PhysicalDeleteEdit', 'Share'].includes(type)) {
 			queryDocQueues.push(queryDoc({ docId: doc_id, id }));
 			querySpaceQueuss.push(querySpace({ spaceId: space_id, id }));
 		}
