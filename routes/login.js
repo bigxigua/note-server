@@ -49,7 +49,7 @@ router.post('/login', async (ctx) => {
         return;
     }
     // 密码登陆时，密码不正确
-    if (isActiveLogin && user[0].password !== `${fnv.hash(`${password}-${PASSWORD_FNV_SALT}`)}`) {
+    if (isActiveLogin && user[0].password !== fnv.hash(`${password}-${PASSWORD_FNV_SALT}`, 128).str()) {
         ctx.body = serializReuslt('USER_PASSWORD_ERROR');
         return;
     }

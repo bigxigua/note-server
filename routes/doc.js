@@ -5,7 +5,7 @@ const spaceController = require('../controller/space');
 const { serializReuslt, handleCustomError } = require('../util/serializable');
 const { hostname } = require('../config/server-config');
 const fnv = require('fnv-plus');
-const { getIn } = require('../util/util');
+const { getIn, isArray } = require('../util/util');
 const docModel = CreateMysqlModel('doc');
 const spaceModel = CreateMysqlModel('space');
 
@@ -35,6 +35,7 @@ router.post('/create/doc', async (ctx) => {
 		catalog: JSON.stringify([...catalog, {
 			docId,
 			level: 0,
+			status: '1',
 			type: 'DOC'
 		}])
 	}, `uuid='${uuid}' AND space_id='${space_id}'`);
@@ -148,7 +149,21 @@ router.post('/doc/update', async (ctx) => {
 			updateParams[k] = body[k];
 		}
 	});
-	console.log('updateParams', updateParams);
+	// 如果status='0'，修改对应space表的catalog字段。
+	if (['0', '1'].includes(body.status)) {
+		const sql = `uuid='${user.uuid}' AND space_id='${body.space_id}'`;
+		const [, spaceInfo] = await spaceModel.find(sql);
+		const catalog = JSON.parse(getIn(spaceInfo, [0, 'catalog'], '[]'));
+		if (isArray(catalog)) {
+			const i = catalog.findIndex(n => n.docId === body.doc_id);
+			catalog[i].status = body.status;
+			const [, info] = await spaceModel.update({ catalog: JSON.stringify(catalog) }, sql);
+			if (getIn(info, ['affectedRows'], 0) < 1) {
+				ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
+				return;
+			}
+		}
+	}
 	const [error, data] = await docController.updateDoc(updateParams, `uuid='${user.uuid}' AND doc_id='${body.doc_id}'`);
 	if (error || !data) {
 		ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
