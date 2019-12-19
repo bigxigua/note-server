@@ -14,31 +14,31 @@ const spaceModel = CreateMysqlModel('space');
  */
 router.post('/create/doc', async (ctx) => {
 	const { body } = ctx.request;
-	const { space_id, title, scene, uuid } = body;
+	const { space_id, title, scene, catalogInfo = {}, uuid } = body;
 	const now = new Date();
 	const docId = fnv.hash(`${space_id}-${uuid}-${now}`, 64).str();
 	const [, spaceInfo] = await spaceModel.find(`uuid='${uuid}' AND space_id='${space_id}'`);
 	if (!Array.isArray(spaceInfo) || !spaceInfo[0] || !spaceInfo[0].catalog) {
-		ctx.body = handleCustomError({
-			message: '未查找到空间信息'
-		});
+		ctx.body = handleCustomError({ message: '未查找到空间信息' });
 		return;
 	}
 	const catalog = JSON.parse(getIn(spaceInfo, [0, 'catalog'], '[]'));
 	if (!Array.isArray(catalog) || catalog.length === 0) {
-		ctx.body = handleCustomError({
-			message: '目录信息有误，请另选空间'
-		});
+		ctx.body = handleCustomError({ message: '目录信息有误，请另选空间' });
 		return;
 	}
-	const [, result] = await spaceModel.update({
-		catalog: JSON.stringify([...catalog, {
-			docId,
-			level: 0,
-			status: '1',
-			type: 'DOC'
-		}])
-	}, `uuid='${uuid}' AND space_id='${space_id}'`);
+	// TODO 插入位置作为参数处理
+	const index = catalogInfo.index ? catalogInfo.index : catalog.length;
+	const level = catalogInfo.level || 0;
+	console.log('-------index-------', index, level);
+	catalog.splice(index + 1, 0, {
+		docId,
+		level,
+		status: '1',
+		type: scene
+	});
+	const [, result] = await spaceModel.update({ catalog: JSON.stringify(catalog) }, `uuid='${uuid}' AND space_id='${space_id}'`);
+
 	if (!getIn(result, ['changedRows'])) {
 		ctx.body = handleCustomError({
 			message: '更新目录失败，请重试'
@@ -149,6 +149,11 @@ router.post('/doc/update', async (ctx) => {
 			updateParams[k] = body[k];
 		}
 	});
+	const [error, data] = await docController.updateDoc(updateParams, `uuid='${user.uuid}' AND doc_id='${body.doc_id}'`);
+	if (error || !data) {
+		ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
+		return;
+	}
 	// 如果status='0'，修改对应space表的catalog字段。
 	if (['0', '1'].includes(body.status)) {
 		const sql = `uuid='${user.uuid}' AND space_id='${body.space_id}'`;
@@ -163,11 +168,6 @@ router.post('/doc/update', async (ctx) => {
 				return;
 			}
 		}
-	}
-	const [error, data] = await docController.updateDoc(updateParams, `uuid='${user.uuid}' AND doc_id='${body.doc_id}'`);
-	if (error || !data) {
-		ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
-		return;
 	}
 	ctx.body = serializReuslt('SUCCESS', { STATUS: 'OK' });
 });
@@ -197,9 +197,22 @@ router.get('/space/docs', async (ctx) => {
  * 删除文档
  */
 router.post('/doc/delete', async (ctx) => {
-	const { body: { doc_id = '', uuid } } = ctx.request;
+	const { body: { doc_id = '', space_id = '', uuid } } = ctx.request;
 	const [error, data] = await docController.deleteDoc(`uuid='${uuid}' AND doc_id='${doc_id}'`);
+	// 删除时也要删除掉对应space表的catalog对应的项
 	if (!error && data && data.affectedRows > 0) {
+		const sql = `uuid='${uuid}' AND space_id='${space_id}'`;
+		const [, spaceInfo] = await spaceModel.find(sql);
+		const catalog = JSON.parse(getIn(spaceInfo, [0, 'catalog'], '[]'));
+		if (isArray(catalog)) {
+			const i = catalog.findIndex(n => n.docId === body.doc_id);
+			catalog.splice(i, 1);
+			const [, info] = await spaceModel.update({ catalog: JSON.stringify(catalog) }, sql);
+			if (getIn(info, ['affectedRows'], 0) < 1) {
+				ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
+				return;
+			}
+		}
 		ctx.body = serializReuslt('SUCCESS', { STATUS: 'OK' });
 	} else {
 		ctx.body = serializReuslt('SYSTEM_INNER_ERROR');

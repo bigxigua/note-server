@@ -31,7 +31,7 @@ const VERIFY_RULES = {
 	'doc/delete': {
 		match: /^doc\/delete(\/)?$/,
 		methods: 'POST',
-		notEmptyParamsName: ['doc_id'],
+		notEmptyParamsName: ['doc_id', 'space_id'],
 		needToVerifyUser: true,
 	},
 	'add/recent': {
