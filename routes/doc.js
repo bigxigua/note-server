@@ -14,7 +14,7 @@ const spaceModel = CreateMysqlModel('space');
  */
 router.post('/create/doc', async (ctx) => {
 	const { body } = ctx.request;
-	const { space_id, title, scene, catalogInfo = {}, uuid } = body;
+	const { space_id, title, scene = 'DOC', catalogInfo = {}, uuid } = body;
 	const now = new Date();
 	const docId = fnv.hash(`${space_id}-${uuid}-${now}`, 64).str();
 	const [, spaceInfo] = await spaceModel.find(`uuid='${uuid}' AND space_id='${space_id}'`);
@@ -35,7 +35,7 @@ router.post('/create/doc', async (ctx) => {
 		docId,
 		level,
 		status: '1',
-		type: scene
+		type: scene.toLocaleUpperCase()
 	});
 	const [, result] = await spaceModel.update({ catalog: JSON.stringify(catalog) }, `uuid='${uuid}' AND space_id='${space_id}'`);
 
