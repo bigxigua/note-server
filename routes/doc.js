@@ -205,7 +205,7 @@ router.post('/doc/delete', async (ctx) => {
 		const [, spaceInfo] = await spaceModel.find(sql);
 		const catalog = JSON.parse(getIn(spaceInfo, [0, 'catalog'], '[]'));
 		if (isArray(catalog)) {
-			const i = catalog.findIndex(n => n.docId === body.doc_id);
+			const i = catalog.findIndex(n => n.docId === doc_id);
 			catalog.splice(i, 1);
 			const [, info] = await spaceModel.update({ catalog: JSON.stringify(catalog) }, sql);
 			if (getIn(info, ['affectedRows'], 0) < 1) {
