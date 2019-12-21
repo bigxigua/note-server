@@ -11,7 +11,15 @@ const spaceModel = CreateMysqlModel('space');
  * 新增最新使用文档
  */
 router.post('/add/recent', async (ctx) => {
-	const { body: { type = '', uuid, doc_id = '', space_id = '' } } = ctx.request;
+	const { body:
+		{
+			type = '',
+			uuid,
+			doc_id = '',
+			space_id = '',
+			doc_title = ''
+		}
+	} = ctx.request;
 	// 查找是否已经存在记录了，就删除该记录
 	const sql = `uuid='${uuid}' AND type='${type}' AND doc_id='${doc_id}' AND space_id='${space_id}'`;
 	const [, recentInfo] = await recentModel.find(sql);
@@ -23,6 +31,7 @@ router.post('/add/recent', async (ctx) => {
 		uuid,
 		doc_id,
 		space_id,
+		doc_title,
 		type,
 		created_at: Date.now(),
 	};
@@ -61,7 +70,7 @@ router.get('/recents', async (ctx) => {
 		ctx.body = serializReuslt('RESULE_DATA_NONE');
 		return;
 	}
-	const queryDoc = async ({ docId, id }) => {
+	const queryDoc = async ({ docId, id, title }) => {
 		const [, d] = await docModel.find(`uuid='${uuid}' AND doc_id='${docId}'`);
 		if (Array.isArray(d) && d.length > 0 && d[0]) {
 			return {
@@ -84,9 +93,9 @@ router.get('/recents', async (ctx) => {
 	const queryDocQueues = [];
 	const querySpaceQueuss = [];
 	data.forEach(n => {
-		const { type, space_id, doc_id, id } = n;
+		const { type, space_id, doc_id, id, doc_title } = n;
 		if (['Edit', 'CreateEdit', 'UpdateEdit', 'LogicalDeleteEdit', 'PhysicalDeleteEdit', 'Share'].includes(type)) {
-			queryDocQueues.push(queryDoc({ docId: doc_id, id }));
+			queryDocQueues.push(queryDoc({ docId: doc_id, id, title: doc_title }));
 			querySpaceQueuss.push(querySpace({ spaceId: space_id, id }));
 		}
 		if (['CreateSpace', 'UpdateSpace', 'DeleteSpace'].includes(type)) {
