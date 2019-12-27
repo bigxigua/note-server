@@ -17,6 +17,9 @@ router.post('/login', async (ctx) => {
     let token = ctx.cookies.get('token');
     let uuid = '';
     let userLoginVersion = '';
+    console.log('-----------------------------');
+    console.log(token);
+    console.log('-----------------------------');
     // 是否是使用帐号密码登陆
     const isActiveLogin = (account && password);
     // 优先使用用户名+密码进行登陆，若无则使用cookie-token方式
@@ -62,7 +65,7 @@ router.post('/login', async (ctx) => {
     token = jwt.sign({
         uuid,
         userLoginVersion: user[0].user_login_version,
-        exp: Math.floor((new Date().getTime()) / 1000) + 60 * 60 * 24 * 30
+        exp: Math.floor((new Date().getTime()) / 1000) + 1000 * 60 * 60 * 24 * 30
     }, JWT_KEY);
     ctx.cookies.set('token', token, cookieConfig);
     const result = user[0];
