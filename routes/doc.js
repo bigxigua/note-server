@@ -144,7 +144,7 @@ router.post('/doc/update', async (ctx) => {
 		draft_update_at: now,
 		updated_at: now
 	};
-	['title', 'markdown', 'html', 'markdown_draft', 'html_draft', 'title_draft', 'status'].forEach(k => {
+	['title', 'markdown', 'html', 'markdown_draft', 'html_draft', 'title_draft', 'status', 'abstract', 'cover'].forEach(k => {
 		if (body.hasOwnProperty(k)) {
 			updateParams[k] = body[k];
 		}

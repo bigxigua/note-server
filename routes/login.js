@@ -17,9 +17,6 @@ router.post('/login', async (ctx) => {
     let token = ctx.cookies.get('token');
     let uuid = '';
     let userLoginVersion = '';
-    console.log('-----------------------------');
-    console.log(token);
-    console.log('-----------------------------');
     // 是否是使用帐号密码登陆
     const isActiveLogin = (account && password);
     // 优先使用用户名+密码进行登陆，若无则使用cookie-token方式
