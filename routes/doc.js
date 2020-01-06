@@ -200,16 +200,18 @@ router.get('/space/docs', async (ctx) => {
 router.post('/doc/delete', async (ctx) => {
 	const { body: { doc_id = '', space_id = '', uuid } } = ctx.request;
 	console.log('---------------', doc_id);
-	const docId = doc_id.indexOf(',') === -1 ? `"${doc_id}"` : doc_id.replace(//, '"')
-	const [error, data] = await docController.deleteDoc(`uuid='${uuid}' AND doc_id in (${doc_id})`);
+	const docId = doc_id.split(',').map(n => `'${n}'`).join(',');
+	const [error, data] = await docController.deleteDoc(`uuid='${uuid}' AND doc_id in (${docId})`);
 	// 删除时也要删除掉对应space表的catalog对应的项
 	if (!error && data && data.affectedRows > 0) {
 		const sql = `uuid='${uuid}' AND space_id='${space_id}'`;
 		const [, spaceInfo] = await spaceModel.find(sql);
 		const catalog = JSON.parse(getIn(spaceInfo, [0, 'catalog'], '[]'));
 		if (isArray(catalog)) {
-			const i = catalog.findIndex(n => n.docId === doc_id);
-			catalog.splice(i, 1);
+			doc_id.split(',').forEach(id => {
+				const i = catalog.findIndex(n => n.docId === id);
+				catalog.splice(i, 1);
+			});
 			const [, info] = await spaceModel.update({ catalog: JSON.stringify(catalog) }, sql);
 			if (getIn(info, ['affectedRows'], 0) < 1) {
 				ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
