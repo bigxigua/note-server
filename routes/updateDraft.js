@@ -13,7 +13,7 @@ const SUB_NOTEBOOK_TABLE_NAME = 'note_subnote';
  *  @subNoteId {string} 子笔记本id
  *  @returns {object} 笔记数据
  */
-router.post('/updateDraft', async (ctx, next) => {
+router.post('/api/updateDraft', async (ctx, next) => {
     let { html, markdown, subNoteId } = ctx.request.body;
     markdown = markdown.replace(/'/img, "''");
     html = html.replace(/'/img, "''");
@@ -34,7 +34,7 @@ router.post('/updateDraft', async (ctx, next) => {
  *  @noteBookName {string} 笔记本名称
  *  @returns {object} 笔记数据
  */
-router.post('/createNotebook', async (ctx, next) => {
+router.post('/api/createNotebook', async (ctx, next) => {
     const { noteBookName, uuid } = ctx.request.body;
     const now = Date.now();
     let createResult = await notebookController.createNotebook({
@@ -57,7 +57,7 @@ router.post('/createNotebook', async (ctx, next) => {
  *  @noteBookId {string} 笔记本名称
  *  @returns {object} 笔记数据
  */
-router.post('/deleteNotebook', async (ctx, next) => {
+router.post('/api/deleteNotebook', async (ctx, next) => {
     const { noteBookId, hasSubNotes, uuid } = ctx.request.body;
     const querySql = `user_id='${uuid}' AND notebook_id='${noteBookId}' `;
     if (hasSubNotes) {
@@ -84,7 +84,7 @@ router.post('/deleteNotebook', async (ctx, next) => {
  *  @subNoteTitle {string} 新的子笔记标题
  *  @returns {object} 笔记数据
  */
-router.post('/createSubNotebook', async (ctx, next) => {
+router.post('/api/createSubNotebook', async (ctx, next) => {
     const { notebookId, subNoteName = '笔记示例' } = ctx.request.body;
     const { uuid } = ctx.request.body;
     const now = Date.now();
@@ -118,7 +118,7 @@ router.post('/createSubNotebook', async (ctx, next) => {
  *  @subNoteId {string} subNoteId. 子笔记sub_note_id
  *  @returns {object} 笔记数据
  */
-router.post('/deleteSubNote', async (ctx, next) => {
+router.post('/api/deleteSubNote', async (ctx, next) => {
     let { type, subNoteId, uuid } = ctx.request.body;
     const querySql = `user_id='${uuid}' AND sub_note_id='${subNoteId}' AND sub_note_exist='${type}' `;
     const notes = await notebookController.findNoteBooks(querySql, SUB_NOTEBOOK_TABLE_NAME);
@@ -149,7 +149,7 @@ router.post('/deleteSubNote', async (ctx, next) => {
  *  getUserNotes 查找用户的所有的笔记本
  *  @returns {null} 
  */
-router.get('/getUserNotes', async (ctx, next) => {
+router.get('/api/getUserNotes', async (ctx, next) => {
     const { uuid } = ctx.request.body;
     // TODO 优化，只需要查SUB_NOTEBOOK_TABLE_NAME表，对数据进行处理即可
     let notebooks = await notebookController.findNoteBooks(`user_id='${uuid}'`, NOTEBOOK_TABLE_NAME);
@@ -177,7 +177,7 @@ router.get('/getUserNotes', async (ctx, next) => {
  *  获取用户最近一次编辑的子笔记信息
  *  @returns {object} 子笔记数据
  */
-router.get('/getRecentEditorSubnote', async (ctx, next) => {
+router.get('/api/getRecentEditorSubnote', async (ctx, next) => {
     const { uuid } = ctx.request.body;
     let notes = await notebookController.findNoteBooks(`user_id='${uuid}' AND sub_note_exist=1 `, SUB_NOTEBOOK_TABLE_NAME);
     console.log(notes, '------');
@@ -194,7 +194,7 @@ router.get('/getRecentEditorSubnote', async (ctx, next) => {
  *  @subNoteId {string} subNoteId. 子笔记sub_note_id
  *  @returns {object} 子笔记数据
  */
-router.post('/updateSubnoteInfo', async (ctx, next) => {
+router.post('/api/updateSubnoteInfo', async (ctx, next) => {
     const { uuid, subNoteId, subNoteExist } = ctx.request.body;
     let notes = await notebookController.findNoteBooks(`user_id='${uuid}' AND sub_note_id='${subNoteId}' `, SUB_NOTEBOOK_TABLE_NAME);
     if (isArray(notes)) {
@@ -222,7 +222,7 @@ router.post('/updateSubnoteInfo', async (ctx, next) => {
  *  @subNoteId {string} subNoteId. 子笔记sub_note_id
  *  @returns {object} 子笔记数据
  */
-router.get('/searchSubNote', async (ctx, next) => {
+router.get('/api/searchSubNote', async (ctx, next) => {
     const { uuid, subNoteName } = ctx.request.query;
     let notes = await notebookController.findNoteBooks(`user_id='${uuid}' AND sub_note_name LIKE '%${subNoteName}%' `, SUB_NOTEBOOK_TABLE_NAME);
     if (isArray(notes)) {

@@ -18,7 +18,7 @@ function asyncFileWriteStreamClose(stream) {
     });
 };
 
-router.post('/upload/image', async (ctx, next) => {
+router.post('/api/upload/image', async (ctx, next) => {
     const { files, body } = ctx.request;
     try {
         const { fileId } = body;

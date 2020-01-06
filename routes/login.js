@@ -11,7 +11,7 @@ const { serializReuslt } = require('../util/serializable');
  *    (1).如果已经注册则验证密码是否正确
  *    (2).如果没有注册创建一个新用户
  */
-router.post('/login', async (ctx) => {
+router.post('/api/login', async (ctx) => {
     // TODO signed cookie
     let { account, password } = ctx.request.body;
     let token = ctx.cookies.get('token');
@@ -77,7 +77,7 @@ router.post('/login', async (ctx) => {
 /**
  * 退出登陆
  */
-router.post('/login/out', async (ctx) => {
+router.post('/api/login/out', async (ctx) => {
     const { uuid } = ctx.request.body;
     let [error, result] = await userController.updateUserInfo({
         user_login_version: Date.now()

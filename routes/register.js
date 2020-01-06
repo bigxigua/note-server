@@ -10,7 +10,7 @@ const { serializReuslt } = require('../util/serializable');
  *    (1).如果已经注册则验证密码是否正确
  *    (2).如果没有注册创建一个新用户
  */
-router.post('/register', async (ctx, next) => {
+router.post('/api/register', async (ctx, next) => {
     let { account, password } = ctx.request.body;
     if (!account || !password) {
         ctx.body = serializReuslt('PARAM_NOT_COMPLETE');

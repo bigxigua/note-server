@@ -5,14 +5,14 @@ const spaceController = require('../controller/space');
 const { serializReuslt, handleCustomError } = require('../util/serializable');
 const { hostname } = require('../config/server-config');
 const fnv = require('fnv-plus');
-const { getIn, isArray } = require('../util/util');
+const { getIn, isArray, log } = require('../util/util');
 const docModel = CreateMysqlModel('doc');
 const spaceModel = CreateMysqlModel('space');
 
 /**
  * 创建一个文档
  */
-router.post('/create/doc', async (ctx) => {
+router.post('/api/create/doc', async (ctx) => {
 	const { body } = ctx.request;
 	const { space_id, title, scene = 'DOC', catalogInfo = {}, uuid } = body;
 	const now = new Date();
@@ -77,7 +77,7 @@ router.post('/create/doc', async (ctx) => {
  *  @limit {string} limit
  *  @returns {Array} 文档列表
  */
-router.get('/docs', async (ctx) => {
+router.get('/api/docs', async (ctx) => {
 	const {
 		user,
 		query: {
@@ -136,7 +136,7 @@ router.get('/docs', async (ctx) => {
 /**
  * 更新文档
  */
-router.post('/doc/update', async (ctx) => {
+router.post('/api/doc/update', async (ctx) => {
 	const { user, body } = ctx.request;
 	const now = new Date();
 	const updateParams = {
@@ -149,6 +149,7 @@ router.post('/doc/update', async (ctx) => {
 			updateParams[k] = body[k];
 		}
 	});
+	console.log(updateParams);
 	const [error, data] = await docController.updateDoc(updateParams, `uuid='${user.uuid}' AND doc_id='${body.doc_id}'`);
 	if (error || !data) {
 		ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
@@ -175,7 +176,7 @@ router.post('/doc/update', async (ctx) => {
 /**
  * 获取用户属于同一个space的所有文档
  */
-router.get('/space/docs', async (ctx) => {
+router.get('/api/space/docs', async (ctx) => {
 	const { query: { space_id = '', uuid } } = ctx.request;
 	const [, space] = await spaceModel.find(`uuid='${uuid}' AND space_id='${space_id}'`);
 	if (!Array.isArray(space) || space.length === 0) {
@@ -197,7 +198,7 @@ router.get('/space/docs', async (ctx) => {
  * 删除文档
  * 支持同时删除多个文档，多个时已应为逗号分隔
  */
-router.post('/doc/delete', async (ctx) => {
+router.post('/api/doc/delete', async (ctx) => {
 	const { body: { doc_id = '', space_id = '', uuid } } = ctx.request;
 	console.log('---------------', doc_id);
 	const docId = doc_id.split(',').map(n => `'${n}'`).join(',');

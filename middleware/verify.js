@@ -4,80 +4,80 @@ const jwt = require('jsonwebtoken');
 const userController = require('../controller/user');
 
 const VERIFY_RULES = {
-	'docs': {
-		match: /^docs(\/)?$/,
+	'api/docs': {
+		match: /^api\/docs(\/)?$/,
 		methods: 'GET',
 		notEmptyParamsName: [],
 		needToVerifyUser: true,
 	},
-	'create/doc': {
-		match: /^create\/doc(\/)?$/,
+	'api/create/doc': {
+		match: /^api\/create\/doc(\/)?$/,
 		methods: 'POST',
 		notEmptyParamsName: ['space_id', 'title', 'scene'],
 		needToVerifyUser: true,
 	},
-	'doc/detail': {
-		match: /^doc\/detail(\/)?$/,
+	'api/doc/detail': {
+		match: /^api\/doc\/detail(\/)?$/,
 		methods: 'GET',
 		notEmptyParamsName: ['doc_id'],
 		needToVerifyUser: true,
 	},
-	'doc/update': {
-		match: /^doc\/update(\/)?$/,
+	'api/doc/update': {
+		match: /^api\/doc\/update(\/)?$/,
 		methods: 'POST',
 		notEmptyParamsName: ['doc_id'],
 		needToVerifyUser: true,
 	},
-	'doc/delete': {
-		match: /^doc\/delete(\/)?$/,
+	'api/doc/delete': {
+		match: /^api\/doc\/delete(\/)?$/,
 		methods: 'POST',
 		notEmptyParamsName: ['doc_id', 'space_id'],
 		needToVerifyUser: true,
 	},
-	'add/recent': {
-		match: /^add\/recent(\/)?$/,
+	'api/add/recent': {
+		match: /^api\/add\/recent(\/)?$/,
 		methods: 'POST',
 		notEmptyParamsName: ['type'],
 		needToVerifyUser: true,
 	},
-	'delete/recent': {
-		match: /^delete\/recent(\/)?$/,
+	'api/delete/recent': {
+		match: /^api\/delete\/recent(\/)?$/,
 		methods: 'POST',
 		notEmptyParamsName: ['id'],
 		needToVerifyUser: true,
 	},
-	'recents': {
-		match: /^recents(\/)?$/,
+	'api/recents': {
+		match: /^api\/recents(\/)?$/,
 		methods: 'GET',
 		notEmptyParamsName: [],
 		needToVerifyUser: true,
 	},
-	'space/docs': {
-		match: /^space\/docs(\/)?$/,
+	'api/space/docs': {
+		match: /^api\/space\/docs(\/)?$/,
 		methods: 'GET',
 		notEmptyParamsName: ['space_id'],
 		needToVerifyUser: true,
 	},
-	'create/space': {
-		match: /^create\/space(\/)?$/,
+	'api/create/space': {
+		match: /^api\/create\/space(\/)?$/,
 		methods: 'POST',
 		notEmptyParamsName: ['public', 'scene', 'name', 'description'],
 		needToVerifyUser: true,
 	},
-	'spaces': {
-		match: /^spaces(\/)?$/,
+	'api/spaces': {
+		match: /^api\/spaces(\/)?$/,
 		methods: 'GET',
 		notEmptyParamsName: [],
 		needToVerifyUser: true,
 	},
-	'spaces/update': {
-		match: /^spaces\/update(\/)?$/,
+	'api/spaces/update': {
+		match: /^api\/spaces\/update(\/)?$/,
 		methods: 'POST',
 		notEmptyParamsName: ['space_id', 'catalog'],
 		needToVerifyUser: true,
 	},
-	'login/out': {
-		match: /^login\/out(\/)?$/,
+	'api/login/out': {
+		match: /^api\/login\/out(\/)?$/,
 		methods: 'POST',
 		notEmptyParamsName: [],
 		needToVerifyUser: true,

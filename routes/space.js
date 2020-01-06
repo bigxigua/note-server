@@ -8,7 +8,7 @@ const spaceModel = CreateMysqlModel('space');
 /**
  * 创建一个空间
  */
-router.post('/create/space', async (ctx) => {
+router.post('/api/create/space', async (ctx) => {
   const { body } = ctx.request;
   const { description, name, scene, public, uuid } = body;
   const now = new Date(Date.now());
@@ -42,7 +42,7 @@ router.post('/create/space', async (ctx) => {
  *  @limit {string} limit
  *  @returns {Array} 空间列表
  */
-router.get('/spaces', async (ctx) => {
+router.get('/api/spaces', async (ctx) => {
   const { query: { limit = 10, uuid, q = '' } } = ctx.request;
   // 查询此前一个月内有修改的。前limit条
   const [error, data] = await spaceModel.find(`uuid='${uuid}' ${q ? `AND name LIKE '%${q}%'` : ''}limit ${limit}`);
@@ -55,7 +55,7 @@ router.get('/spaces', async (ctx) => {
   });
 });
 
-router.post('/spaces/update', async (ctx) => {
+router.post('/api/spaces/update', async (ctx) => {
   const { user: { uuid }, body: { space_id, catalog } } = ctx.request;
   const [error, data] = await spaceModel.update({
     updated_at: new Date(),

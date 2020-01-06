@@ -27,11 +27,24 @@ module.exports = {
 		}
 		return obj;
 	},
+	// 筛选返回用户信息
 	getSafeUserInfo: (user) => {
 		const result = { ...user };
 		delete result.id;
 		delete result.password;
 		delete result.user_login_version;
 		return result;
+	},
+	// 带颜色的console.log
+	log: (text, color = 'white') => {
+		const colors = {
+			'red': '\x1b[31m',
+			'black': '\x1b[30m',
+			'green': '\x1b[32m',
+			'yellow': '\x1b[33m',
+			'blue': '\x1b[34m',
+			'white': '\x1b[37m'
+		};
+		console.log(`${colors[color] || 'white'}${text}`);
 	}
 }

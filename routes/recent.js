@@ -10,7 +10,7 @@ const spaceModel = CreateMysqlModel('space');
 /**
  * 新增最新使用文档
  */
-router.post('/add/recent', async (ctx) => {
+router.post('/api/add/recent', async (ctx) => {
 	const { body:
 		{
 			type = '',
@@ -46,7 +46,7 @@ router.post('/add/recent', async (ctx) => {
 /**
  * 物理删除最新使用文档
  */
-router.post('/delete/recent', async (ctx) => {
+router.post('/api/delete/recent', async (ctx) => {
 	const { body: { uuid, id } } = ctx.request;
 	const [error, data] = await recentModel.delete(`uuid='${uuid}' AND id=${parseInt(id)}`);
 	if (!error && data && data.affectedRows > 0) {
@@ -59,7 +59,7 @@ router.post('/delete/recent', async (ctx) => {
 /**
  * 获取最近使用列表
  */
-router.get('/recents', async (ctx) => {
+router.get('/api/recents', async (ctx) => {
 	const { query: { uuid, limit = 10 }, user } = ctx.request;
 	const [error, data] = await recentModel.find(`uuid='${uuid}' order by created_at DESC limit ${limit}`);
 	if (error || !Array.isArray(data)) {
