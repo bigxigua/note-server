@@ -195,10 +195,13 @@ router.get('/space/docs', async (ctx) => {
 
 /**
  * 删除文档
+ * 支持同时删除多个文档，多个时已应为逗号分隔
  */
 router.post('/doc/delete', async (ctx) => {
 	const { body: { doc_id = '', space_id = '', uuid } } = ctx.request;
-	const [error, data] = await docController.deleteDoc(`uuid='${uuid}' AND doc_id='${doc_id}'`);
+	console.log('---------------', doc_id);
+	const docId = doc_id.indexOf(',') === -1 ? `"${doc_id}"` : doc_id.replace(//, '"')
+	const [error, data] = await docController.deleteDoc(`uuid='${uuid}' AND doc_id in (${doc_id})`);
 	// 删除时也要删除掉对应space表的catalog对应的项
 	if (!error && data && data.affectedRows > 0) {
 		const sql = `uuid='${uuid}' AND space_id='${space_id}'`;
