@@ -62,8 +62,10 @@ router.post('/api/login', async (ctx) => {
     token = jwt.sign({
         uuid,
         userLoginVersion: user[0].user_login_version,
-        exp: Math.floor((new Date().getTime()) / 1000) + 1000 * 60 * 60 * 24 * 30
-    }, JWT_KEY);
+        // exp: Math.floor((new Date().getTime()) / 1000) + 1000 * 60 * 60 * 24 * 30
+    }, JWT_KEY, {
+        expiresIn: '7d'
+    });
     ctx.cookies.set('token', token, cookieConfig);
     const result = user[0];
     delete result.password;

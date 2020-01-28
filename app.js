@@ -28,7 +28,7 @@ app.use(logger());
 app.use(cors({
   credentials: true,
   formidable: {
-    maxFileSize: 200*1024*1024,
+    maxFileSize: 200 * 1024 * 1024,
   },
 }));
 app.use(verify());
