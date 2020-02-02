@@ -41,8 +41,10 @@ router.post('/api/register', async (ctx, next) => {
         token = jwt.sign({
             uuid,
             userLoginVersion: user[0].user_login_version,
-            exp: Math.floor(now / 1000) + 60 * 60 * 24 * 30
-        }, JWT_KEY);
+            // exp: Math.floor(now / 1000) + 60 * 60 * 24 * 30
+        }, JWT_KEY, {
+            expiresIn: '7d'
+        });
         ctx.cookies.set('token', token, cookieConfig);
         ctx.body = serializReuslt('SUCCESS', {
             ...user[0],

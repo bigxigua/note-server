@@ -4,6 +4,7 @@ const CreateMysqlModel = require('../controller/sqlController');
 const fnv = require('fnv-plus');
 
 const spaceModel = CreateMysqlModel('space');
+const docModel = CreateMysqlModel('doc');
 
 /**
  * 创建一个空间
@@ -55,6 +56,7 @@ router.get('/api/spaces', async (ctx) => {
   });
 });
 
+// 更新空间信息
 router.post('/api/spaces/update', async (ctx) => {
   const { user: { uuid }, body: { space_id, catalog } } = ctx.request;
   const [error, data] = await spaceModel.update({
@@ -66,6 +68,19 @@ router.post('/api/spaces/update', async (ctx) => {
     return;
   }
   ctx.body = serializReuslt('SUCCESS', { STATUS: 'OK' });
+});
+// 删除空间并同时删除该空间下的文档
+router.post('/api/spaces/delete', async (ctx) => {
+  const { user: { uuid }, body: { space_id } } = ctx.request;
+  const sql = `uuid='${uuid}' AND space_id='${space_id}'`;
+  const results = await Promise.all([spaceModel.delete(sql), docModel.delete(sql)]);
+  console.log(results);
+  if (results[0] && results[0][1] && results[0][1].affectedRows > 0 &&
+    results[1] && results[1][1] && results[1][1].affectedRows > 0) {
+    ctx.body = serializReuslt('SUCCESS', { STATUS: 'OK' });
+  } else {
+    ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
+  }
 });
 
 module.exports = router;

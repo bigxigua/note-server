@@ -76,6 +76,12 @@ const VERIFY_RULES = {
 		notEmptyParamsName: ['space_id', 'catalog'],
 		needToVerifyUser: true,
 	},
+	'api/spaces/delete': {
+		match: /^api\/spaces\/delete(\/)?$/,
+		methods: 'POST',
+		notEmptyParamsName: ['space_id'],
+		needToVerifyUser: true,
+	},
 	'api/login/out': {
 		match: /^api\/login\/out(\/)?$/,
 		methods: 'POST',
