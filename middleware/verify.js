@@ -73,7 +73,7 @@ const VERIFY_RULES = {
 	'api/spaces/update': {
 		match: /^api\/spaces\/update(\/)?$/,
 		methods: 'POST',
-		notEmptyParamsName: ['space_id', 'catalog'],
+		notEmptyParamsName: ['space_id'],
 		needToVerifyUser: true,
 	},
 	'api/spaces/delete': {

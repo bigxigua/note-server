@@ -56,19 +56,38 @@ router.get('/api/spaces', async (ctx) => {
   });
 });
 
-// 更新空间信息
+/**
+ *  更新空间信息，更新目录、名称、描述、icon等
+ *  @params  {object}  ctx - 上下文对象
+ *    - space_id {string} 空间id 必选项
+ *    - catalog {json} 空间目录 非必须，更新时则传
+ *    - name {string} 名称 非必须，更新时则传
+ *    - description {string} 空间描述 非必须，更新时则传
+ *    - avatar {string} 空间avatar 非必须，更新时则传
+ *    - public {string} 可见范围 非必须，更新时则传
+ *  @returns null
+ */
 router.post('/api/spaces/update', async (ctx) => {
-  const { user: { uuid }, body: { space_id, catalog } } = ctx.request;
-  const [error, data] = await spaceModel.update({
-    updated_at: new Date(),
-    catalog
-  }, `uuid='${uuid}' AND space_id='${space_id}'`);
+  const { user: { uuid } } = ctx.request;
+  const updateParamsKey = ['catalog', 'name', 'description', 'avatar', 'public'];
+  const body = ctx.request.body;
+  const params = {
+    updated_at: String(Date.now()),
+  };
+  for (let key in body) {
+    if (updateParamsKey.indexOf(key) !== -1 && body.hasOwnProperty(key)) {
+      params[key] = body[key];
+    }
+  }
+  const [error, data] = await spaceModel.update(params, `uuid='${uuid}' AND space_id='${body.space_id}'`);
   if (error || !data) {
     ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
     return;
   }
   ctx.body = serializReuslt('SUCCESS', { STATUS: 'OK' });
 });
+
+
 // 删除空间并同时删除该空间下的文档
 router.post('/api/spaces/delete', async (ctx) => {
   const { user: { uuid }, body: { space_id } } = ctx.request;
