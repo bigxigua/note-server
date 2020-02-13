@@ -21,12 +21,19 @@ router.post('/api/login', async (ctx) => {
     const isActiveLogin = (account && password);
     // 优先使用用户名+密码进行登陆，若无则使用cookie-token方式
     // 用户名+密码登陆方式
+    console.log(11111);
     if (isActiveLogin) {
         uuid = fnv.hash(account, 64).str();
     } else {
         // token登陆
         if (token) {
-            let verifyResult = await jwt.verify(token, JWT_KEY) || {};
+            let verifyResult = {};
+            try {
+                verifyResult = await jwt.verify(token, JWT_KEY) || {};
+                console.log('======>>', verifyResult);
+            } catch (error) {
+                console.log('[jwt验证失败]', error);
+            }
             if (verifyResult.uuid) {
                 uuid = verifyResult.uuid;
                 userLoginVersion = verifyResult.userLoginVersion;
@@ -62,10 +69,8 @@ router.post('/api/login', async (ctx) => {
     token = jwt.sign({
         uuid,
         userLoginVersion: user[0].user_login_version,
-        // exp: Math.floor((new Date().getTime()) / 1000) + 1000 * 60 * 60 * 24 * 30
-    }, JWT_KEY, {
-        expiresIn: '7d'
-    });
+        exp: Math.floor((new Date().getTime()) / 1000) + 60 * 60 * 24 * 30
+    }, JWT_KEY);
     ctx.cookies.set('token', token, cookieConfig);
     const result = user[0];
     delete result.password;

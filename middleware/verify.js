@@ -2,7 +2,6 @@ const { serializReuslt } = require('../util/serializable');
 const { JWT_KEY } = require('../config/server-config');
 const jwt = require('jsonwebtoken');
 const userController = require('../controller/user');
-
 const VERIFY_RULES = {
 	'api/docs': {
 		match: /^api\/docs(\/)?$/,
@@ -103,12 +102,15 @@ module.exports = function () {
 		const matched = Object.keys(VERIFY_RULES).filter(n => {
 			return VERIFY_RULES[n].match.test(url);
 		});
+
 		if (matched.length === 0) {
 			await next();
 			return;
 		}
+
 		const method = request.method;
 		const { notEmptyParamsName, needToVerifyUser } = VERIFY_RULES[url];
+
 		// 用户操作身份验证 -无token
 		if (needToVerifyUser && !token) {
 			ctx.body = serializReuslt('USER_NOT_LOGGED_IN');
@@ -123,7 +125,12 @@ module.exports = function () {
 			ctx.body = serializReuslt('PARAM_NOT_COMPLETE');
 			return;
 		}
-		const { uuid, userLoginVersion } = jwt.verify(token, JWT_KEY) || {};
+		let jwtVerifyResult = {}
+		try {
+			jwtVerifyResult = jwt.verify(token, JWT_KEY) || {};
+		} catch (error) {
+		}
+		const { uuid, userLoginVersion } = jwtVerifyResult;
 		// 用户操作身份验证 -无uuid
 		if (needToVerifyUser && !uuid) {
 			ctx.body = serializReuslt('USER_NOT_EXIST');
