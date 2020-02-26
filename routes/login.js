@@ -21,7 +21,7 @@ router.post('/api/login', async (ctx) => {
     const isActiveLogin = (account && password);
     // 优先使用用户名+密码进行登陆，若无则使用cookie-token方式
     // 用户名+密码登陆方式
-    console.log(11111);
+    console.log('token', token);
     if (isActiveLogin) {
         uuid = fnv.hash(account, 64).str();
     } else {
@@ -34,6 +34,7 @@ router.post('/api/login', async (ctx) => {
             } catch (error) {
                 console.log('[jwt验证失败]', error);
             }
+            console.log('verifyResult', verifyResult);
             if (verifyResult.uuid) {
                 uuid = verifyResult.uuid;
                 userLoginVersion = verifyResult.userLoginVersion;

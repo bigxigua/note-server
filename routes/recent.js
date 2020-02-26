@@ -1,7 +1,7 @@
 const router = require('koa-router')();
 const { serializReuslt } = require('../util/serializable');
 const CreateMysqlModel = require('../controller/sqlController');
-const { getIn, getSafeUserInfo } = require('../util/util');
+const { getIn, getSafeUserInfo, getAutoUpdateParams } = require('../util/util');
 
 const recentModel = CreateMysqlModel('recent');
 const docModel = CreateMysqlModel('doc');
@@ -15,17 +15,45 @@ router.post('/api/add/recent', async (ctx) => {
 		{
 			type = '',
 			uuid,
-			doc_id = '',
-			space_id = '',
-			doc_title = ''
+			doc_id,
+			space_id,
+			space_name,
+			doc_title
 		}
 	} = ctx.request;
-	// 查找是否已经存在记录了，就删除该记录
-	const sql = `uuid='${uuid}' AND type='${type}' AND doc_id='${doc_id}' AND space_id='${space_id}'`;
+	let sql = '';
+	if (doc_id) {
+		sql = `uuid='${uuid}' AND doc_id='${doc_id}' AND space_id='${space_id}'`;
+	} else if (space_id) {
+		sql = `uuid='${uuid}' AND space_id='${space_id}'`;
+	}
+	if (!sql) {
+		ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
+		return;
+	}
+	// 如果当前记录已经存在，则做update操作，比如针对某个文档的新增/编辑/更新均只记录一次，以最新操作为准，知识库同理
 	const [, recentInfo] = await recentModel.find(sql);
+
+	const now = String(Date.now());
+
 	if (getIn(recentInfo, [0, 'id'])) {
-		// 删除操作
-		await recentModel.delete(sql);
+		const updateParams = doc_id
+			? getAutoUpdateParams({
+				space_id,
+				space_name,
+				doc_title
+			}) : getAutoUpdateParams({ space_name })
+		const updateResult = await recentModel.update({
+			type,
+			update_at: now,
+			...updateParams,
+		}, sql);
+		if (updateResult.changedRows) {
+			ctx.body = serializReuslt('SUCCESS', { STATUS: 'OK' });
+		} else {
+			ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
+		}
+		return;
 	}
 	const params = {
 		uuid,
@@ -33,7 +61,8 @@ router.post('/api/add/recent', async (ctx) => {
 		space_id,
 		doc_title,
 		type,
-		created_at: Date.now(),
+		created_at: now,
+		update_at: now
 	};
 	const [error, data] = await recentModel.create(params);
 	if (!error && data && data.affectedRows > 0) {
@@ -61,7 +90,7 @@ router.post('/api/delete/recent', async (ctx) => {
  */
 router.get('/api/recents', async (ctx) => {
 	const { query: { uuid, limit = 10 }, user } = ctx.request;
-	const [error, data] = await recentModel.find(`uuid='${uuid}' order by created_at DESC limit ${limit}`);
+	const [error, data] = await recentModel.find(`uuid='${uuid}' order by update_at DESC limit ${limit}`);
 	if (error || !Array.isArray(data)) {
 		ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
 		return;
@@ -114,7 +143,8 @@ router.get('/api/recents', async (ctx) => {
 			return p;
 		});
 	}
-	ctx.body = serializReuslt('SUCCESS', data);
+	const list = data.filter(n => n.update_at);
+	ctx.body = serializReuslt('SUCCESS', list);
 });
 
 module.exports = router;

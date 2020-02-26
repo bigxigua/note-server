@@ -46,5 +46,16 @@ module.exports = {
 			'white': '\x1b[37m'
 		};
 		console.log(`${colors[color] || 'white'}${text}`);
+	},
+	// 增量更新，有则更新无则不改
+	getAutoUpdateParams: (params) => {
+		for (let key in params) {
+			if (params.hasOwnProperty(key)) {
+				if (params[key] === undefined) {
+					delete params[key];
+				}
+			}
+		}
+		return params;
 	}
 }

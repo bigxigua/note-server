@@ -93,9 +93,8 @@ router.post('/api/spaces/delete', async (ctx) => {
   const { user: { uuid }, body: { space_id } } = ctx.request;
   const sql = `uuid='${uuid}' AND space_id='${space_id}'`;
   const results = await Promise.all([spaceModel.delete(sql), docModel.delete(sql)]);
-  console.log(results);
   if (results[0] && results[0][1] && results[0][1].affectedRows > 0 &&
-    results[1] && results[1][1] && results[1][1].affectedRows > 0) {
+    results[1] && results[1][1]) {
     ctx.body = serializReuslt('SUCCESS', { STATUS: 'OK' });
   } else {
     ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
