@@ -9,8 +9,16 @@ const { getIn, isArray, log } = require('../util/util');
 const docModel = CreateMysqlModel('doc');
 const spaceModel = CreateMysqlModel('space');
 
+
 /**
  * 创建一个文档
+ * @param {string} space_id - 必选 空间id
+ * @param {string} title - 可选 文档名称
+ * @param {string} scene - 可选 节点类型，目前仅支持普通文档doc和空节点，empty_node
+ * @param {object} catalogInfo - 可选 指定在哪个目录下创建该文档
+ * 								{string} folderDocId 父节点docId
+ * 								{number} level 层级
+ * @return {object} 返回docId
  */
 router.post('/api/create/doc', async (ctx) => {
 	const { body } = ctx.request;
@@ -28,9 +36,14 @@ router.post('/api/create/doc', async (ctx) => {
 		return;
 	}
 	// TODO 插入位置作为参数处理
-	const index = catalogInfo.index ? catalogInfo.index : catalog.length;
-	const level = catalogInfo.level || 0;
-	console.log('-------index-------', index, level);
+	let index = catalog.length;
+	if (catalogInfo.folderDocId) {
+		const __index__ = catalog.findIndex(n => n.docId === catalogInfo.folderDocId);
+		if (__index__ !== -1) {
+			index = __index__;
+		}
+	}
+	const level = parseInt(catalogInfo.level) || 0;
 	catalog.splice(index + 1, 0, {
 		docId,
 		level,

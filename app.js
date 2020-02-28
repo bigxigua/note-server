@@ -6,13 +6,14 @@ const onerror = require('koa-onerror');
 const koaBody = require('koa-body');
 const logger = require('koa-logger');
 const cors = require('koa-cors');
-const updateDraft = require('./routes/updateDraft');
+// const updateDraft = require('./routes/updateDraft');
 const login = require('./routes/login');
 const register = require('./routes/register');
 const uploader = require('./routes/uploader');
 const userDocActions = require('./routes/doc');
 const space = require('./routes/space');
 const recent = require('./routes/recent');
+const template = require('./routes/template');
 const verify = require('./middleware/verify');
 
 // error handler
@@ -52,10 +53,11 @@ app.use(async (ctx, next) => {
 app.use(login.routes(), login.allowedMethods());
 app.use(register.routes(), register.allowedMethods());
 app.use(uploader.routes(), uploader.allowedMethods());
-app.use(updateDraft.routes(), updateDraft.allowedMethods());
+// app.use(updateDraft.routes(), updateDraft.allowedMethods());
 app.use(userDocActions.routes(), userDocActions.allowedMethods());
 app.use(recent.routes(), recent.allowedMethods());
 app.use(space.routes(), space.allowedMethods());
+app.use(template.routes(), template.allowedMethods());
 
 // error-handling
 app.on('error', (err, ctx) => {
