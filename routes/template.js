@@ -55,7 +55,8 @@ router.post('/api/create/template', async (ctx) => {
     }
     ctx.body = serializReuslt('SUCCESS', { templateId });
   } catch (error) {
-    ctx.body = handleCustomError({ message: '生成模版预览图失败，请重试', error });
+    ctx.body = handleCustomError({ message: '生成模版预览图失败，请重试', data: error });
+    console.log('生成模版预览图失败:', error);
   }
 });
 
