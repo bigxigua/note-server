@@ -102,7 +102,7 @@ router.get('/api/docs', async (ctx) => {
 			docId = ''
 		}
 	} = ctx.request;
-	const commonSql = `uuid='${uuid}'${q ? ` AND title LIKE '%${decodeURIComponent(q)}%'` : ' '}AND scene='doc'`;
+	const commonSql = `uuid='${uuid}'${q ? ` AND title LIKE '%${decodeURIComponent(q)}%'` : ' '}AND scene='doc' `;
 	const pageSql = `limit ${(pageNo - 1) * pageSize},${pageSize}`;
 	const orderSql = `ORDER BY id DESC`;
 	const sqlMapType = {

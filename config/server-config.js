@@ -14,6 +14,6 @@ exports.cookieConfig = {
     overwrite: false
 };
 
-exports.hostname = NODE_ENV === 'development' ? 'http://127.0.0.1' : 'https://bigxigua.net';
+exports.hostname = NODE_ENV === 'development' ? 'http://127.0.0.1:3004' : 'https://bigxigua.net';
 
 exports.port = 8080;
