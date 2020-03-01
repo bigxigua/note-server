@@ -3,9 +3,9 @@ const CreateMysqlModel = require('../controller/sqlController');
 const { serializReuslt, handleCustomError } = require('../util/serializable');
 const { cookieConfig, hostname } = require('../config/server-config');
 const fnv = require('fnv-plus');
-const Pageres = require('pageres');
+const Pageres = require('../util/pageres');
 const path = require('path');
-// const { getIn, isArray, log } = require('../util/util');
+const { log } = require('../util/util');
 const templateModel = CreateMysqlModel('template');
 const destDir = path.resolve(__dirname, '../../file-uploader/upload/file/images/');
 
@@ -33,6 +33,7 @@ router.post('/api/create/template', async (ctx) => {
   try {
     pageresOptions.cookies[0] = `token=${token}; path=/; domain=${cookieConfig.domain}`;
     pageresOptions.filename = templateId;
+    log(pageresOptions.cookies[0], 'green');
     await new Pageres(pageresOptions)
       .src(url, ['800x1280'])
       .dest(destDir)

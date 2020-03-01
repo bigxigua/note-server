@@ -23,26 +23,3 @@
 //     process.exit();
 //   }
 // })();
-
-const puppeteer = require('puppeteer');
-
-(async () => {
-  const browser = await puppeteer.launch({
-    args: [
-      '--no-sandbox',
-      '--headless',
-      '--disable-gpu',
-      '--window-size=1920x1080'
-    ]
-  });
-  const page = await browser.newPage();
-  await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.100 Safari/537.36');
-  try {
-    await page.goto('https://www.baidu.com/');
-  } catch (error) {
-    console.log('error:', error);
-  }
-  await page.screenshot({ path: './fuck.png' });
-  await browser.close();
-  console.log('end');
-})();
