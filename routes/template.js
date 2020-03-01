@@ -38,7 +38,7 @@ router.post('/api/create/template', async (ctx) => {
     pageresOptions.cookies[0] = {
       name: 'token',
       value: token,
-      domain: `${cookieConfig.domain}`,
+      domain: `.${cookieConfig.domain}`,
       path: '/',
       httpOnly: true
     };
