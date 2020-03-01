@@ -163,9 +163,9 @@ class Pageres extends EventEmitter {
       launchOptions: {
         args: [
           '--no-sandbox',
-          '--headless',
-          '--disable-gpu',
-          '--window-size=1920x1080'
+          // '--headless',
+          // '--disable-gpu',
+          // '--window-size=1920x1080'
         ]
       }
     };
