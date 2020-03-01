@@ -1,5 +1,5 @@
 const NODE_ENV = process.env.env;
-const domain = NODE_ENV === 'development' ? '127.0.0.1' : 'www.bigxigua.net';
+const domain = NODE_ENV === 'development' ? '127.0.0.1' : 'bigxigua.net';
 
 exports.JWT_KEY = 'TBZ_KEY';
 
