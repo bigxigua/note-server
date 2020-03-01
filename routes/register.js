@@ -37,11 +37,9 @@ router.post('/api/register', async (ctx, next) => {
             ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
             return;
         }
-        console.log('----------------', user);
         token = jwt.sign({
             uuid,
             userLoginVersion: user[0].user_login_version,
-            // exp: Math.floor(now / 1000) + 60 * 60 * 24 * 30
         }, JWT_KEY, {
             expiresIn: '7d'
         });

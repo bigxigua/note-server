@@ -12,7 +12,6 @@ const { serializReuslt } = require('../util/serializable');
  *    (2).如果没有注册创建一个新用户
  */
 router.post('/api/login', async (ctx) => {
-    // TODO signed cookie
     let { account, password } = ctx.request.body;
     let token = ctx.cookies.get('token');
     let uuid = '';
@@ -70,8 +69,10 @@ router.post('/api/login', async (ctx) => {
     token = jwt.sign({
         uuid,
         userLoginVersion: user[0].user_login_version,
-        exp: Math.floor((new Date().getTime()) / 1000) + 60 * 60 * 24 * 30
-    }, JWT_KEY);
+        // exp: Math.floor((new Date().getTime()) / 1000) + 60 * 60 * 24 * 30
+    }, JWT_KEY, {
+        expiresIn: '7d'
+    });
     ctx.cookies.set('token', token, cookieConfig);
     const result = user[0];
     delete result.password;

@@ -45,7 +45,11 @@ module.exports = {
 			'blue': '\x1b[34m',
 			'white': '\x1b[37m'
 		};
+		console.log('');
+		console.log('-------------start------------');
 		console.log(`${colors[color] || 'white'}${text}`);
+		console.log('-------------ended------------');
+		console.log('');
 	},
 	// 增量更新，有则更新无则不改
 	getAutoUpdateParams: (params) => {

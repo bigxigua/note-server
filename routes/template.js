@@ -15,6 +15,7 @@ const pageresOptions = {
   delay: 0, // 延时多少秒开始截图
   crop: true, // 裁切到设定的高度
   cookies: [], // 转到要使用Cookie的网站，然后将其从DevTools复制粘贴。
+  userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.100 Safari/537.36', // Custom user agent
   hide: ['.article-header', '.article-header_right', '.article-header_left', '.bookcatalog-wrapper'], // 隐藏与CSS选择器匹配的DOM元素数组。
 };
 
@@ -30,8 +31,11 @@ router.post('/api/create/template', async (ctx) => {
   const now = Date.now().toString();
   const templateId = fnv.hash(`template-${uuid}-${now}`, 64).str();
   const token = ctx.cookies.get('token');
+  const tokenSig = ctx.cookies.get('token.sig');
+  log(tokenSig, 'red');
   try {
     pageresOptions.cookies[0] = `token=${token}; path=/; domain=${cookieConfig.domain}`;
+    pageresOptions.cookies[1] = `token.sig=${token}; path=/; domain=${cookieConfig.domain}`;
     pageresOptions.filename = templateId;
     log(pageresOptions.cookies[0], 'green');
     await new Pageres(pageresOptions)

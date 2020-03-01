@@ -9,8 +9,8 @@ exports.cookieConfig = {
     domain,
     signed: true,
     path: '/',
-    maxAge: 60 * 60 * 1000,
-    httpOnly: false,
+    maxAge: 7200000,
+    httpOnly: true,
     overwrite: false
 };
 
