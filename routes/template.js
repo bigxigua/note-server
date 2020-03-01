@@ -34,8 +34,14 @@ router.post('/api/create/template', async (ctx) => {
   const tokenSig = ctx.cookies.get('token.sig');
   log(tokenSig, 'red');
   try {
-    pageresOptions.cookies[0] = `token=${token}; path=/; domain=${cookieConfig.domain}`;
-    pageresOptions.cookies[1] = `token.sig=${token}; path=/; domain=${cookieConfig.domain}`;
+    // pageresOptions.cookies[0] = `token=${token}; path=/; domain=${cookieConfig.domain}`;
+    pageresOptions.cookies[0] = {
+      name: 'token',
+      value: token,
+      domain: `${cookieConfig.domain}`,
+      path: '/',
+      httpOnly: true
+    };
     pageresOptions.filename = templateId;
     log(pageresOptions.cookies[0], 'green');
     await new Pageres(pageresOptions)
