@@ -71,7 +71,7 @@ router.post('/api/login', async (ctx) => {
         userLoginVersion: user[0].user_login_version,
         // exp: Math.floor((new Date().getTime()) / 1000) + 60 * 60 * 24 * 30
     }, JWT_KEY, {
-        expiresIn: '7d'
+        expiresIn: '30d'
     });
     ctx.cookies.set('token', token, cookieConfig);
     const result = user[0];
@@ -87,7 +87,21 @@ router.post('/api/login', async (ctx) => {
  * 退出登陆
  */
 router.post('/api/login/out', async (ctx) => {
-    const { uuid } = ctx.request.body;
+    const token = ctx.cookies.get('token');
+    if (!token) {
+        ctx.body = serializReuslt('SUCCESS', { STATUS: 'OK' });
+        return;
+    }
+    let jwtVerifyResult = {}
+    try {
+        jwtVerifyResult = jwt.verify(token, JWT_KEY) || {};
+    } catch (error) {
+    }
+    const { uuid } = jwtVerifyResult;
+    if (!uuid) {
+        ctx.body = serializReuslt('SUCCESS', { STATUS: 'OK' });
+        return;
+    }
     let [error, result] = await userController.updateUserInfo({
         user_login_version: Date.now()
     }, `uuid='${uuid}'`);

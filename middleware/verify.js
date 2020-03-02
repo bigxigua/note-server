@@ -81,12 +81,6 @@ const VERIFY_RULES = {
 		notEmptyParamsName: ['space_id'],
 		needToVerifyUser: true,
 	},
-	'api/login/out': {
-		match: /^api\/login\/out(\/)?$/,
-		methods: 'POST',
-		notEmptyParamsName: [],
-		needToVerifyUser: true,
-	},
 	'api/create/template': {
 		match: /^api\/create\/template(\/)?$/,
 		methods: 'POST',
