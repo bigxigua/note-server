@@ -9,7 +9,7 @@ exports.cookieConfig = {
     domain,
     signed: true,
     path: '/',
-    maxAge: 7200000,
+    maxAge: 30 * 24 * 60 * 60 * 1000,
     httpOnly: true,
     overwrite: false
 };
@@ -17,3 +17,5 @@ exports.cookieConfig = {
 exports.hostname = NODE_ENV === 'development' ? 'http://127.0.0.1:3004' : 'https://www.bigxigua.net';
 
 exports.port = 8080;
+
+exports.isDevelopment = NODE_ENV === 'development';

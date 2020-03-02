@@ -1,7 +1,7 @@
 const router = require('koa-router')();
 const CreateMysqlModel = require('../controller/sqlController');
 const { serializReuslt, handleCustomError } = require('../util/serializable');
-const { cookieConfig, hostname } = require('../config/server-config');
+const { cookieConfig, isDevelopment } = require('../config/server-config');
 const fnv = require('fnv-plus');
 const Pageres = require('../util/pageres');
 const path = require('path');
@@ -31,14 +31,12 @@ router.post('/api/create/template', async (ctx) => {
   const now = Date.now().toString();
   const templateId = fnv.hash(`template-${uuid}-${now}`, 64).str();
   const token = ctx.cookies.get('token');
-  const tokenSig = ctx.cookies.get('token.sig');
-  log(tokenSig, 'red');
+  const hostname = isDevelopment ? 'http://127.0.0.1:3000' : 'https://www.bigxigua.net';
   try {
-    // pageresOptions.cookies[0] = `token=${token}; path=/; domain=${cookieConfig.domain}`;
     pageresOptions.cookies[0] = {
       name: 'token',
       value: token,
-      domain: `.${cookieConfig.domain}`,
+      domain: `${isDevelopment ? '' : '.'}${cookieConfig.domain}`,
       path: '/',
       httpOnly: true
     };
@@ -53,11 +51,11 @@ router.post('/api/create/template', async (ctx) => {
       created_at: now,
       updated_at: now,
       title,
-      url: `${hostname}/file/images/${templateId}.png`,
+      url,
       html,
       markdown: '',
       uuid,
-      cover,
+      cover: cover || `${hostname}/file/images/${templateId}.png`,
       status: '1',
     });
     if (error || !data) {
@@ -70,5 +68,20 @@ router.post('/api/create/template', async (ctx) => {
     console.log('生成模版预览图失败:', error);
   }
 });
+
+/**
+ * 获取用户所有模版信息
+ * @param {string} uuid - 必选 用户uuid
+ */
+router.post('/api/templates', async (ctx) => {
+  const { query: { uuid } } = ctx.request;
+  const [error, data] = await templateModel.find(`uuid='${uuid}' ORDER BY id DESC`);
+  if (error || !Array.isArray(data)) {
+    ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
+    return;
+  }
+  ctx.body = serializReuslt('SUCCESS', data);
+});
+
 
 module.exports = router;

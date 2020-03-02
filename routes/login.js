@@ -91,7 +91,6 @@ router.post('/api/login/out', async (ctx) => {
     let [error, result] = await userController.updateUserInfo({
         user_login_version: Date.now()
     }, `uuid='${uuid}'`);
-    console.log(error, result);
     if (!error && result.changedRows > 0) {
         ctx.body = serializReuslt('SUCCESS', { STATUS: 'OK' });
     } else {

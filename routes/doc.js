@@ -14,6 +14,7 @@ const spaceModel = CreateMysqlModel('space');
  * 创建一个文档
  * @param {string} space_id - 必选 空间id
  * @param {string} title - 可选 文档名称
+ * @param {string} html - 可选 文档内容，基于模版创建时用到
  * @param {string} scene - 可选 节点类型，目前仅支持普通文档doc和空节点，empty_node
  * @param {object} catalogInfo - 可选 指定在哪个目录下创建该文档
  * 								{string} folderDocId 父节点docId
@@ -22,7 +23,7 @@ const spaceModel = CreateMysqlModel('space');
  */
 router.post('/api/create/doc', async (ctx) => {
 	const { body } = ctx.request;
-	const { space_id, title, scene = 'DOC', catalogInfo = {}, uuid } = body;
+	const { space_id, title, html, scene = 'DOC', catalogInfo = {}, uuid } = body;
 	const now = new Date();
 	const docId = fnv.hash(`${space_id}-${uuid}-${now}`, 64).str();
 	const [, spaceInfo] = await spaceModel.find(`uuid='${uuid}' AND space_id='${space_id}'`);
@@ -66,7 +67,7 @@ router.post('/api/create/doc', async (ctx) => {
 		created_at: now,
 		title,
 		url: `${hostname}/article/${docId}?spaceId=${space_id}`,
-		html: '',
+		html,
 		html_draft: '',
 		markdown: '',
 		markdown_draft: '',

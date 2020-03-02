@@ -93,6 +93,12 @@ const VERIFY_RULES = {
 		notEmptyParamsName: ['html', 'url'],
 		needToVerifyUser: true,
 	},
+	'api/templates': {
+		match: /^api\/templates(\/)?$/,
+		methods: 'POST',
+		notEmptyParamsName: [],
+		needToVerifyUser: true,
+	},
 	// 'upload/image': {
 	// 	match: /^upload\/image(\/)?$/,
 	// 	methods: 'POST',

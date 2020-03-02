@@ -41,7 +41,7 @@ router.post('/api/register', async (ctx, next) => {
             uuid,
             userLoginVersion: user[0].user_login_version,
         }, JWT_KEY, {
-            expiresIn: '7d'
+            expiresIn: '30d'
         });
         ctx.cookies.set('token', token, cookieConfig);
         ctx.body = serializReuslt('SUCCESS', {
