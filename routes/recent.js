@@ -7,6 +7,9 @@ const recentModel = CreateMysqlModel('recent');
 const docModel = CreateMysqlModel('doc');
 const spaceModel = CreateMysqlModel('space');
 
+const SPACE_ACTIONS = ['CreateSpace', 'UpdateSpace', 'DeleteSpace'];
+const DOC_ACTIONS = ['CreateEdit', 'UpdateEdit', 'LogicalDeleteEdit', 'PhysicalDeleteEdit', 'Share', 'RestoreEdit'];
+
 /**
  * 新增最新使用文档
  */
@@ -22,9 +25,13 @@ router.post('/api/add/recent', async (ctx) => {
 		}
 	} = ctx.request;
 	let sql = '';
-	if (doc_id) {
+
+	const isAboutSpace = SPACE_ACTIONS.includes(type);
+	const isAboutDoc = DOC_ACTIONS.includes(type);
+
+	if (isAboutDoc) {
 		sql = `uuid='${uuid}' AND doc_id='${doc_id}' AND space_id='${space_id}'`;
-	} else if (space_id) {
+	} else if (isAboutSpace) {
 		sql = `uuid='${uuid}' AND space_id='${space_id}'`;
 	}
 	if (!sql) {
@@ -37,12 +44,12 @@ router.post('/api/add/recent', async (ctx) => {
 	const now = String(Date.now());
 
 	if (getIn(recentInfo, [0, 'id'])) {
-		const updateParams = doc_id
+		const updateParams = isAboutDoc
 			? getAutoUpdateParams({
 				space_id,
 				space_name,
 				doc_title
-			}) : getAutoUpdateParams({ space_name })
+			}) : getAutoUpdateParams({ space_name });
 		const updateResult = await recentModel.update({
 			type,
 			update_at: now,
@@ -59,6 +66,7 @@ router.post('/api/add/recent', async (ctx) => {
 		uuid,
 		doc_id,
 		space_id,
+		space_name,
 		doc_title,
 		type,
 		created_at: now,
