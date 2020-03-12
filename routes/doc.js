@@ -163,7 +163,6 @@ router.post('/api/doc/update', async (ctx) => {
 			updateParams[k] = body[k];
 		}
 	});
-	console.log(updateParams);
 	const [error, data] = await docController.updateDoc(updateParams, `uuid='${user.uuid}' AND doc_id='${body.doc_id}'`);
 	if (error || !data) {
 		ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
@@ -214,7 +213,6 @@ router.get('/api/space/docs', async (ctx) => {
  */
 router.post('/api/doc/delete', async (ctx) => {
 	const { body: { doc_id = '', space_id = '', uuid } } = ctx.request;
-	console.log('---------------', doc_id);
 	const docId = doc_id.split(',').map(n => `'${n}'`).join(',');
 	const [error, data] = await docController.deleteDoc(`uuid='${uuid}' AND doc_id in (${docId})`);
 	// 删除时也要删除掉对应space表的catalog对应的项

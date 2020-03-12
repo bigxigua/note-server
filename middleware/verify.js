@@ -103,8 +103,10 @@ const VERIFY_RULES = {
 module.exports = function () {
 	return async function verify(ctx, next) {
 		const { cookies, request } = ctx;
+		const method = request.method;
 		const token = cookies.get('token');
 		const url = request.url.split('?')[0].substring(1);
+
 		const matched = Object.keys(VERIFY_RULES).filter(n => {
 			return VERIFY_RULES[n].match.test(url);
 		});
@@ -114,10 +116,9 @@ module.exports = function () {
 			return;
 		}
 
-		const method = request.method;
 		const { notEmptyParamsName, needToVerifyUser } = VERIFY_RULES[url];
 
-		// 用户操作身份验证 -无token
+		// 需要登陆态但无token时
 		if (needToVerifyUser && !token) {
 			ctx.body = serializReuslt('USER_NOT_LOGGED_IN');
 			return;

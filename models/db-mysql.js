@@ -24,7 +24,8 @@ class BaseMysql {
         });
     }
     execute(sql, params = {}) {
-        // console.log(sql);
+        console.log(sql);
+        console.log('');
         return new Promise((resolve, reject) => {
             this.pool.getConnection((error, connection) => {
                 if (error) {
@@ -63,7 +64,11 @@ class BaseMysql {
     // 更新
     update(tableName, params, where) {
         const updateSql = Object.keys(params).reduce((p, v, i) => {
-            const value = typeof params[v] === 'number' ? params[v] : `"${params[v].toString().replace(/"/img, '\\"')}"`;
+            let value = params[v];
+            if (typeof value !== 'number') {
+                value = `"${params[v].toString().replace(/"/img, '\\"')}"`;
+                value = value.replace(/\\/img, '\\\\');
+            }
             return p + `${v}=${value}${i === Object.keys(params).length - 1 ? '' : ','} `;
         }, '');
         return this.execute(`update ${tableName} SET ${updateSql} WHERE ${where}`);
