@@ -66,8 +66,9 @@ class BaseMysql {
         const updateSql = Object.keys(params).reduce((p, v, i) => {
             let value = params[v];
             if (typeof value !== 'number') {
-                value = `"${params[v].toString().replace(/"/img, '\\"')}"`;
-                value = value.replace(/\\/img, '\\\\');
+                value = value.toString().replace(/"/mg, '\'');
+                value = `"${value}"`;
+                value = value.replace(/\\/mg, '\\\\');
             }
             return p + `${v}=${value}${i === Object.keys(params).length - 1 ? '' : ','} `;
         }, '');
