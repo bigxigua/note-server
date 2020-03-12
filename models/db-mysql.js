@@ -8,6 +8,9 @@ const {
     connectionLimit
 } = require('../config/mysql-config');
 
+// 忽略掉转义JSON字符串中的双引号，`${tableName}-${key}`;
+const JSON_TYPE_COLLECTIONS = ['space-catalog'];
+
 class BaseMysql {
     constructor() {
         this.pool = null;
@@ -24,8 +27,6 @@ class BaseMysql {
         });
     }
     execute(sql, params = {}) {
-        console.log(sql);
-        console.log('');
         return new Promise((resolve, reject) => {
             this.pool.getConnection((error, connection) => {
                 if (error) {
@@ -34,6 +35,7 @@ class BaseMysql {
                 } else {
                     connection.query(sql, params, (err, res, fields) => {
                         connection.release();
+                        console.log(sql);
                         if (err) {
                             reject(err);
                             return;
@@ -66,13 +68,20 @@ class BaseMysql {
         const updateSql = Object.keys(params).reduce((p, v, i) => {
             let value = params[v];
             if (typeof value !== 'number') {
-                value = value.toString().replace(/"/mg, '\'');
-                value = `"${value}"`;
+                value = value.toString();
+                if (!JSON_TYPE_COLLECTIONS.includes(`${tableName}-${v}`)) {
+                    // 非json类型先转义双引号为单引号，再整个加上双引号
+                    value = value.replace(/"/mg, '\'');
+                    value = `"${value}"`;
+                } else {
+                    // json类型，因key值必须由双引号包裹，不能转义
+                    value = `'${value}'`;
+                }
                 value = value.replace(/\\/mg, '\\\\');
             }
             return p + `${v}=${value}${i === Object.keys(params).length - 1 ? '' : ','} `;
         }, '');
-        return this.execute(`update ${tableName} SET ${updateSql} WHERE ${where}`);
+        return this.execute(`UPDATE ${tableName} SET ${updateSql} WHERE ${where}`);
     }
     // 改
     updateUserByAccount(tableName, value, account) {
