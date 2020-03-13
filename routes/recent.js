@@ -1,7 +1,7 @@
 const router = require('koa-router')();
 const { serializReuslt } = require('../util/serializable');
 const CreateMysqlModel = require('../controller/sqlController');
-const { getIn, getSafeUserInfo, getAutoUpdateParams } = require('../util/util');
+const { getIn, getSafeUserInfo, getAutoUpdateParams, log } = require('../util/util');
 
 const recentModel = CreateMysqlModel('recent');
 const docModel = CreateMysqlModel('doc');
@@ -32,7 +32,7 @@ router.post('/api/add/recent', async (ctx) => {
 	if (isAboutDoc) {
 		sql = `uuid='${uuid}' AND doc_id='${doc_id}' AND space_id='${space_id}'`;
 	} else if (isAboutSpace) {
-		sql = `uuid='${uuid}' AND space_id='${space_id}'`;
+		sql = `uuid='${uuid}' AND space_id='${space_id}' AND doc_id=''`;
 	}
 	if (!sql) {
 		ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
@@ -40,7 +40,6 @@ router.post('/api/add/recent', async (ctx) => {
 	}
 	// 如果当前记录已经存在，则做update操作，比如针对某个文档的新增/编辑/更新均只记录一次，以最新操作为准，知识库同理
 	const [, recentInfo] = await recentModel.find(sql);
-
 	const now = String(Date.now());
 
 	if (getIn(recentInfo, [0, 'id'])) {
@@ -50,7 +49,8 @@ router.post('/api/add/recent', async (ctx) => {
 				space_name,
 				doc_title
 			}) : getAutoUpdateParams({ space_name });
-		const updateResult = await recentModel.update({
+		console.log('=----====>>>', updateParams);
+		const [, updateResult] = await recentModel.update({
 			type,
 			update_at: now,
 			...updateParams,
