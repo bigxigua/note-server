@@ -93,6 +93,18 @@ const VERIFY_RULES = {
 		notEmptyParamsName: [],
 		needToVerifyUser: true,
 	},
+	'api/create/shortcut': {
+		match: /^api\/create\/shortcut(\/)?$/,
+		methods: 'POST',
+		notEmptyParamsName: ['title', 'url', 'type'],
+		needToVerifyUser: true,
+	},
+	'api/shortcut': {
+		match: /^api\/shortcut(\/)?$/,
+		methods: 'GET',
+		notEmptyParamsName: [],
+		needToVerifyUser: true,
+	},
 	// 'upload/image': {
 	// 	match: /^upload\/image(\/)?$/,
 	// 	methods: 'POST',

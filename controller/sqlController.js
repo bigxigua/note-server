@@ -12,7 +12,9 @@ async function tryCatchWrapper(fn) {
 
 function CreateMysqlModel(table) {
   return {
-    mysqlBaseModel,
+    execute(sql) {
+      return tryCatchWrapper(async () => { return mysqlBaseModel.execute(sql, table) })
+    },
     find(sql) {
       return tryCatchWrapper(async () => { return mysqlBaseModel.find(table, sql) });
     },
