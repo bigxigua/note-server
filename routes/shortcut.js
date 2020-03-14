@@ -30,7 +30,17 @@ router.post('/api/create/shortcut', async (ctx) => {
     ctx.body = handleCustomError({ message: '添加快捷入口失败，请重试！' });
     return;
   }
-  ctx.body = serializReuslt('SUCCESS', { STATUS: 'OK' });
+  ctx.body = serializReuslt('SUCCESS', {
+    STATUS: 'OK',
+    data: {
+      title,
+      url,
+      shortcut_id: shortcutId,
+      uuid,
+      type,
+      id: orderNum
+    }
+  });
 });
 
 /**
@@ -53,16 +63,15 @@ router.get('/api/shortcut', async (ctx) => {
  *  删除某个快捷入口
  *  @returns {Array} 空间列表
  */
-router.post('/api/shortcut/delete', async (ctx) => {
-  // const { user: { uuid }, body: { space_id } } = ctx.request;
-  // const sql = `uuid='${uuid}' AND space_id='${space_id}'`;
-  // const results = await Promise.all([spaceModel.delete(sql), docModel.delete(sql)]);
-  // if (results[0] && results[0][1] && results[0][1].affectedRows > 0 &&
-  //   results[1] && results[1][1]) {
-  //   ctx.body = serializReuslt('SUCCESS', { STATUS: 'OK' });
-  // } else {
-  //   ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
-  // }
+router.post('/api/delete/shortcut', async (ctx) => {
+  const { user: { uuid }, body: { shortcutId } } = ctx.request;
+  const sql = `uuid='${uuid}' AND shortcut_id='${shortcutId}'`;
+  const [error, data] = await shortcutModel.delete(sql);
+  if (!error && data && data.affectedRows > 0) {
+    ctx.body = serializReuslt('SUCCESS', { STATUS: 'OK' });
+  } else {
+    ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
+  }
 });
 
 module.exports = router;

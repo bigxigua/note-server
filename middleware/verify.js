@@ -99,6 +99,12 @@ const VERIFY_RULES = {
 		notEmptyParamsName: ['title', 'url', 'type'],
 		needToVerifyUser: true,
 	},
+	'api/delete/shortcut': {
+		match: /^api\/delete\/shortcut(\/)?$/,
+		methods: 'POST',
+		notEmptyParamsName: ['shortcutId'],
+		needToVerifyUser: true,
+	},
 	'api/shortcut': {
 		match: /^api\/shortcut(\/)?$/,
 		methods: 'GET',
