@@ -2,7 +2,7 @@ const router = require('koa-router')();
 const { serializReuslt, handleCustomError } = require('../util/serializable');
 const CreateMysqlModel = require('../controller/sqlController');
 const fnv = require('fnv-plus');
-const { getIn } = require('../util/util');
+const { getIn, getAutoUpdateParams } = require('../util/util');
 
 const shortcutModel = CreateMysqlModel('shortcut');
 
@@ -68,6 +68,40 @@ router.post('/api/delete/shortcut', async (ctx) => {
   const sql = `uuid='${uuid}' AND shortcut_id='${shortcutId}'`;
   const [error, data] = await shortcutModel.delete(sql);
   if (!error && data && data.affectedRows > 0) {
+    ctx.body = serializReuslt('SUCCESS', { STATUS: 'OK' });
+  } else {
+    ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
+  }
+});
+
+/**
+ *  更新快捷入口信息，排序
+ */
+router.post('/api/shortcut/order', async (ctx) => {
+  const { user: { uuid }, body } = ctx.request;
+  const params = {
+    updated_at: String(Date.now()),
+  };
+  const {
+    sourceShortcutId = '',
+    sourceOrderNum = '',
+    destinationShortcutId = '',
+    destinationOrderNum
+  } = body;
+  const updateSourceSql = `uuid='${uuid}' AND shortcut_id='${sourceShortcutId}'`;
+  const destinationShortcutSql = `uuid='${uuid}' AND shortcut_id='${destinationShortcutId}'`;
+  const updateSourceParams = {
+    order_num: destinationOrderNum
+  };
+  const destinationParams = {
+    order_num: sourceOrderNum
+  };
+  const results = await Promise.all([
+    shortcutModel.update(updateSourceParams, updateSourceSql),
+    shortcutModel.update(destinationParams, destinationShortcutSql),
+  ]);
+  if (results[0] && results[0][1] && results[0][1].affectedRows > 0 &&
+    results[1] && results[1][1]) {
     ctx.body = serializReuslt('SUCCESS', { STATUS: 'OK' });
   } else {
     ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
