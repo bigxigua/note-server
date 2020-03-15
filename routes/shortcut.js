@@ -36,9 +36,9 @@ router.post('/api/create/shortcut', async (ctx) => {
       title,
       url,
       shortcut_id: shortcutId,
+      order_num: orderNum,
       uuid,
-      type,
-      id: orderNum
+      type
     }
   });
 });
