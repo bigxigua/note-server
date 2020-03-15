@@ -2,7 +2,7 @@ const router = require('koa-router')();
 const { serializReuslt, handleCustomError } = require('../util/serializable');
 const CreateMysqlModel = require('../controller/sqlController');
 const fnv = require('fnv-plus');
-const { getIn, getAutoUpdateParams } = require('../util/util');
+const { getIn, delay } = require('../util/util');
 
 const shortcutModel = CreateMysqlModel('shortcut');
 
@@ -14,8 +14,8 @@ router.post('/api/create/shortcut', async (ctx) => {
   const { title, url, type, uuid } = body;
   const now = String(Date.now());
   const shortcutId = fnv.hash(`${uuid}-${now}-${title}-${url}`, 64).str();
-  const [, result] = await shortcutModel.execute(`select max(id) from shortcut`);
-  const orderNum = getIn(result, [0, 'max(id)'], 0) + 1;
+  const [, result] = await shortcutModel.execute(`select max(order_num) from shortcut`);
+  const orderNum = getIn(result, [0, 'max(order_num)'], 0) + 1;
   const [error, data] = await shortcutModel.create({
     uuid,
     title,
@@ -50,7 +50,7 @@ router.post('/api/create/shortcut', async (ctx) => {
  */
 router.get('/api/shortcut', async (ctx) => {
   const { query: { uuid, q = '' } } = ctx.request;
-  const [error, data] = await shortcutModel.find(`uuid='${uuid}' ${q ? `AND name LIKE '%${q}%'` : ''}limit 200`);
+  const [error, data] = await shortcutModel.find(`uuid='${uuid}' ${q ? `AND name LIKE '%${q}%'` : ''}order by order_num DESC limit 200`);
   if (error || !Array.isArray(data)) {
     ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
     return;
@@ -79,29 +79,23 @@ router.post('/api/delete/shortcut', async (ctx) => {
  */
 router.post('/api/shortcut/order', async (ctx) => {
   const { user: { uuid }, body } = ctx.request;
-  const params = {
-    updated_at: String(Date.now()),
-  };
-  const {
-    sourceShortcutId = '',
-    sourceOrderNum = '',
-    destinationShortcutId = '',
-    destinationOrderNum
-  } = body;
-  const updateSourceSql = `uuid='${uuid}' AND shortcut_id='${sourceShortcutId}'`;
-  const destinationShortcutSql = `uuid='${uuid}' AND shortcut_id='${destinationShortcutId}'`;
-  const updateSourceParams = {
-    order_num: destinationOrderNum
-  };
-  const destinationParams = {
-    order_num: sourceOrderNum
-  };
+  const now = String(Date.now());
+  const { sourceShortcutId = '' } = body;
+  const sourceOrderNum = parseInt(body.sourceOrderNum);
+  const destinationOrderNum = parseInt(body.destinationOrderNum);
+  let sql = '';
+  if (sourceOrderNum < destinationOrderNum /* 下移 */) {
+    sql = `UPDATE shortcut SET updated_at='${now}', order_num=order_num-1 WHERE uuid='${uuid}' AND order_num BETWEEN ${sourceOrderNum + 1} AND ${destinationOrderNum}`;
+  } else {
+    sql = `UPDATE shortcut SET updated_at='${now}', order_num=order_num+1 WHERE uuid='${uuid}' AND order_num BETWEEN ${destinationOrderNum} AND ${sourceOrderNum - 1}`;
+  }
+  const updateDragItemSql = `UPDATE shortcut SET order_num=${parseInt(destinationOrderNum)}  WHERE uuid='${uuid}' AND shortcut_id='${sourceShortcutId}'`;
   const results = await Promise.all([
-    shortcutModel.update(updateSourceParams, updateSourceSql),
-    shortcutModel.update(destinationParams, destinationShortcutSql),
+    shortcutModel.execute(sql),
+    shortcutModel.execute(updateDragItemSql),
   ]);
-  if (results[0] && results[0][1] && results[0][1].affectedRows > 0 &&
-    results[1] && results[1][1]) {
+  if (results[0] && results[0][1] &&
+    results[1] && results[1][1].affectedRows > 0) {
     ctx.body = serializReuslt('SUCCESS', { STATUS: 'OK' });
   } else {
     ctx.body = serializReuslt('SYSTEM_INNER_ERROR');

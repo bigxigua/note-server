@@ -61,5 +61,13 @@ module.exports = {
 			}
 		}
 		return params;
+	},
+	// 延迟函数
+	delay: async (time = 300) => {
+		return new Promise((resolve) => {
+			setTimeout(() => {
+				resolve();
+			}, time);
+		});
 	}
 }

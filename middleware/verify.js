@@ -108,7 +108,7 @@ const VERIFY_RULES = {
 	'api/shortcut/order': {
 		match: /^api\/shortcut\/order(\/)?$/,
 		methods: 'POST',
-		notEmptyParamsName: ['sourceShortcutId', 'sourceOrderNum', 'destinationShortcutId', 'destinationOrderNum'],
+		notEmptyParamsName: ['sourceShortcutId', 'sourceOrderNum', 'destinationOrderNum'],
 		needToVerifyUser: true,
 	},
 	'api/shortcut': {
