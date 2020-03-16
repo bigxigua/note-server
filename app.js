@@ -6,6 +6,8 @@ const onerror = require('koa-onerror');
 const koaBody = require('koa-body');
 const logger = require('koa-logger');
 const cors = require('koa-cors');
+
+// route
 const login = require('./routes/login');
 const register = require('./routes/register');
 const uploader = require('./routes/uploader');
@@ -14,6 +16,9 @@ const space = require('./routes/space');
 const recent = require('./routes/recent');
 const template = require('./routes/template');
 const shortcut = require('./routes/shortcut');
+const search = require('./routes/search');
+
+// middleware
 const verify = require('./middleware/verify');
 
 // error handler
@@ -58,6 +63,7 @@ app.use(recent.routes(), recent.allowedMethods());
 app.use(space.routes(), space.allowedMethods());
 app.use(template.routes(), template.allowedMethods());
 app.use(shortcut.routes(), shortcut.allowedMethods());
+app.use(search.routes(), search.allowedMethods());
 
 // error-handling
 app.on('error', (err, ctx) => {

@@ -12,8 +12,8 @@ async function tryCatchWrapper(fn) {
 
 function CreateMysqlModel(table) {
   return {
-    execute(sql) {
-      return tryCatchWrapper(async () => { return mysqlBaseModel.execute(sql, table) })
+    execute(sql, params = {}) {
+      return tryCatchWrapper(async () => { return mysqlBaseModel.execute(sql, params) })
     },
     find(sql) {
       return tryCatchWrapper(async () => { return mysqlBaseModel.find(table, sql) });

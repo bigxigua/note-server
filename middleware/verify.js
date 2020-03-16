@@ -117,12 +117,12 @@ const VERIFY_RULES = {
 		notEmptyParamsName: [],
 		needToVerifyUser: true,
 	},
-	// 'upload/image': {
-	// 	match: /^upload\/image(\/)?$/,
-	// 	methods: 'POST',
-	// 	notEmptyParamsName: [],
-	// 	needToVerifyUser: true,
-	// }
+	'api/search': {
+		match: /^api\/search(\/)?$/,
+		methods: 'POST',
+		notEmptyParamsName: ['q'],
+		needToVerifyUser: true,
+	}
 };
 module.exports = function () {
 	return async function verify(ctx, next) {
