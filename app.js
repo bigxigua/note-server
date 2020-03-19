@@ -1,5 +1,12 @@
 const Koa = require('koa');
-const app = new Koa();
+// 注：proxy表示当真正的代理头字段将被信任时，获取X-Forwarded-For的值，在使用nginx做反向代理时要想获取真实
+// 客户端ip，除了nginx在对应的proxy_pass下添加一行：proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;外，这里的
+// proxy必须为true
+const app = new Koa({
+  proxy: true,
+  proxyIpHeader: 'X-Real-IP',
+  maxIpsCount: 1, // 西瓜文档服务器仅一个nginx 反向代理
+});
 const views = require('koa-views');
 const json = require('koa-json');
 const onerror = require('koa-onerror');
