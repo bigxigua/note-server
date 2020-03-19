@@ -15,6 +15,9 @@ const RESULT_CODES = {
   USER_HAS_EXISTED: create(20005, '此用户已被注册'),
   USER_INVALIDATION_OF_IDENTITY: create(20006, '身份信息失效，请重新登陆'),
 
+  /* 用户错误：40001*/
+  USER_PERMISSION_DENIED: create(40001, '您只有查看的权限哟，快自己去创建一个账号吧！'),
+
   /* 业务错误：30001-39999 */
   SPECIFIED_QUESTIONED_USER_NOT_EXIST: create(30001, '服务开小差啦!请稍后再试'),
 
