@@ -2,6 +2,14 @@ const { serializReuslt } = require('../util/serializable');
 const { JWT_KEY } = require('../config/server-config');
 const jwt = require('jsonwebtoken');
 const userController = require('../controller/user');
+
+function getClientIp(req) {
+	return req.headers['x-forwarded-for'] || // 判断是否有反向代理 IP
+		req.connection.remoteAddress || // 判断 connection 的远程 IP
+		req.socket.remoteAddress || // 判断后端的 socket 的 IP
+		req.connection.socket.remoteAddress;
+}
+
 const VERIFY_RULES = {
 	'api/docs': {
 		match: /^api\/docs(\/)?$/,
@@ -126,10 +134,12 @@ const VERIFY_RULES = {
 };
 module.exports = function () {
 	return async function verify(ctx, next) {
-		const { cookies, request } = ctx;
+		const { cookies, request, req } = ctx;
 		const method = request.method;
 		const token = cookies.get('token');
 		const url = request.url.split('?')[0].substring(1);
+
+		console.log('getClientIp:', getClientIp(req));
 
 		const matched = Object.keys(VERIFY_RULES).filter(n => {
 			return VERIFY_RULES[n].match.test(url);
