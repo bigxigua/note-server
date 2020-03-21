@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const userController = require('../controller/user');
 
 // 拥有超级管理员权限的ip地址
-const SUPER_ADMIN_IP = ['115.172.87.49'];
+const SUPER_ADMIN_IP = ['115.172.87.49', '115.174.188.159'];
 // 需要开放权限的uuid
 const OPEN_UUIDS = ['1ojwj6x7payrz'];
 
