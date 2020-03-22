@@ -83,5 +83,18 @@ router.post('/api/templates', async (ctx) => {
   ctx.body = serializReuslt('SUCCESS', data);
 });
 
+/**
+ * 根据模版id删除模版
+ * @param {string} templateId - 必选 模版id
+ */
+router.post('/api/delete/template', async (ctx) => {
+  const { body: { uuid, templateId } } = ctx.request;
+  const [error, data] = await templateModel.delete(`uuid='${uuid}' AND template_id='${templateId}'`);
+  if (!error && data && data.affectedRows > 0) {
+    ctx.body = serializReuslt('SUCCESS', { STATUS: 'OK' });
+    return;
+  }
+  ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
+});
 
 module.exports = router;
