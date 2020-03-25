@@ -28,7 +28,7 @@ router.post('/api/create/doc', async (ctx) => {
 	const docId = fnv.hash(`${space_id}-${uuid}-${now}`, 64).str();
 	const [, spaceInfo] = await spaceModel.find(`uuid='${uuid}' AND space_id='${space_id}'`);
 	if (!Array.isArray(spaceInfo) || !spaceInfo[0] || !spaceInfo[0].catalog) {
-		ctx.body = handleCustomError({ message: '未查找到空间信息' });
+		ctx.body = handleCustomError({ message: '文档只能新建在有效的空间内' });
 		return;
 	}
 	const catalog = JSON.parse(getIn(spaceInfo, [0, 'catalog'], '[]'));
