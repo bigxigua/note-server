@@ -137,5 +137,17 @@ module.exports = {
     methods: 'POST',
     notEmptyParamsName: ['q'],
     needToVerifyUser: true,
-  }
+  },
+  'api/ip': {
+    match: /^api\/ip(\/)?$/,
+    methods: 'POST',
+    notEmptyParamsName: ['ip'],
+    needToVerifyUser: true,
+  },
+  'api/ips': {
+    match: /^api\/ips(\/)?$/,
+    methods: 'POST',
+    notEmptyParamsName: [],
+    needToVerifyUser: true,
+  },
 };

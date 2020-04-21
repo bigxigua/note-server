@@ -24,6 +24,7 @@ const recent = require('./routes/recent');
 const template = require('./routes/template');
 const shortcut = require('./routes/shortcut');
 const search = require('./routes/search');
+const admin = require('./routes/admin');
 
 // middleware
 const verify = require('./middleware/verify');
@@ -71,6 +72,7 @@ app.use(space.routes(), space.allowedMethods());
 app.use(template.routes(), template.allowedMethods());
 app.use(shortcut.routes(), shortcut.allowedMethods());
 app.use(search.routes(), search.allowedMethods());
+app.use(admin.routes(), admin.allowedMethods());
 
 // error-handling
 app.on('error', (err, ctx) => {
