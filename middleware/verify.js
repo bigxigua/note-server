@@ -1,11 +1,11 @@
+const fs = require('fs');
+const path = require('path');
 const { serializReuslt } = require('../util/serializable');
 const { JWT_KEY, isDevelopment } = require('../config/server-config');
 const VERIFY_RULES = require('../config/route.verify.config');
 const jwt = require('jsonwebtoken');
 const userController = require('../controller/user');
 
-// 拥有超级管理员权限的ip地址
-const SUPER_ADMIN_IP = ['115.174.188.69'];
 // 需要开放权限的uuid
 const OPEN_UUIDS = ['1ojwj6x7payrz'];
 
@@ -24,6 +24,13 @@ function getClientIp(req) {
 	return ip;
 }
 
+async function getIps() {
+	const configFileName = path.join(__dirname, '../upload') + `/config.json`;
+	const configJson = await fs.readFileSync(configFileName, { encoding: 'utf-8' });
+	const ips = JSON.parse(configJson || '{}').ips || [];
+	return ips;
+}
+
 module.exports = function () {
 	return async function verify(ctx, next) {
 		const { cookies, request, req } = ctx;
@@ -31,8 +38,6 @@ module.exports = function () {
 		const token = cookies.get('token');
 		const url = request.url.split('?')[0].substring(1);
 		const realIp = getClientIp(req);
-
-		console.log('realIp=====>>>', realIp);
 
 		const matched = Object.keys(VERIFY_RULES).filter(n => {
 			return VERIFY_RULES[n].match.test(url);
@@ -43,7 +48,11 @@ module.exports = function () {
 			return;
 		}
 
-		const { notEmptyParamsName, needToVerifyUser, access } = VERIFY_RULES[url];
+		const {
+			notEmptyParamsName,
+			needToVerifyUser,
+			access
+		} = VERIFY_RULES[url];
 
 		// 需要登陆态但无token时
 		if (needToVerifyUser && !token) {
@@ -55,6 +64,7 @@ module.exports = function () {
 			const value = request[method === 'POST' ? 'body' : 'query'][key];
 			return (typeof value !== 'number' && typeof value !== 'boolean') ? value : true;
 		});
+
 		// 参数不合法校验
 		if (!parameterIsNotValid) {
 			ctx.body = serializReuslt('PARAM_NOT_COMPLETE');
@@ -71,10 +81,14 @@ module.exports = function () {
 			ctx.body = serializReuslt('USER_NOT_EXIST');
 			return;
 		}
+		// 获取ips
+		const ips = await getIps();
+		console.log('realIp=====>>>', realIp);
+		console.log('ips=====>>>', ips);
 		// 未拥有该操作的权限
 		if (!isDevelopment
 			&& access === 'SUPER_ADMIN'
-			&& SUPER_ADMIN_IP.indexOf(realIp) === -1
+			&& ips.indexOf(realIp) === -1
 			&& OPEN_UUIDS.indexOf(uuid) !== -1) {
 			ctx.body = serializReuslt('USER_PERMISSION_DENIED');
 			return;
