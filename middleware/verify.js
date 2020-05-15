@@ -84,7 +84,6 @@ module.exports = function () {
 		// 获取ips
 		const ips = await getIps();
 		console.log('realIp=====>>>', realIp);
-		console.log('ips=====>>>', ips);
 		// 未拥有该操作的权限
 		if (!isDevelopment
 			&& access === 'SUPER_ADMIN'
@@ -102,6 +101,8 @@ module.exports = function () {
 		ctx.request.user = user[0];
 		ctx.request.body.uuid = uuid;
 		ctx.request.query.uuid = uuid;
+		ctx.request.query.__realIp__ = realIp;
+		ctx.request.body.__realIp__ = realIp;
 		await next();
 	}
 }

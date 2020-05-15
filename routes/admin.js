@@ -22,4 +22,19 @@ router.get('/api/ips', async (ctx) => {
   ctx.body = serializReuslt('SUCCESS', { ips });
 });
 
+router.get('/api/currentIp', async (ctx) => {
+  const { body: { __realIp__ } } = ctx.request;
+  ctx.body = serializReuslt('SUCCESS', { ip: __realIp__ });
+});
+
+router.post('/api/deleteIp', async (ctx) => {
+  const { body: { ip } } = ctx.request;
+  const configFileName = path.join(__dirname, '../upload') + `/config.json`;
+  const configJson = await fs.readFileSync(configFileName, { encoding: 'utf-8' });
+  const config = JSON.parse(configJson || '{}');
+  config.ips = (config.ips || []).filter(n => n !== ip);
+  await fs.writeFileSync(configFileName, JSON.stringify(config));
+  ctx.body = serializReuslt('SUCCESS');
+});
+
 module.exports = router;

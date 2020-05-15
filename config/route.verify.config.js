@@ -150,4 +150,16 @@ module.exports = {
     notEmptyParamsName: [],
     needToVerifyUser: true,
   },
+  'api/currentIp': {
+    match: /^api\/currentIp(\/)?$/,
+    methods: 'GET',
+    notEmptyParamsName: [],
+    needToVerifyUser: true,
+  },
+  'api/deleteIp': {
+    match: /^api\/deleteIp(\/)?$/,
+    methods: 'POST',
+    notEmptyParamsName: ['ip'],
+    needToVerifyUser: true,
+  },
 };
