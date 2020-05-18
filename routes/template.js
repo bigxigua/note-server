@@ -7,6 +7,7 @@ const Pageres = require('../util/pageres');
 const path = require('path');
 const { log } = require('../util/util');
 const templateModel = CreateMysqlModel('template');
+const docModel = CreateMysqlModel('doc');
 const destDir = path.resolve(__dirname, '../../file-uploader/upload/file/images/');
 
 // sizes参考https://github.com/kevva/viewport-list/blob/master/data.json
@@ -24,14 +25,28 @@ const pageresOptions = {
  * @param {string} html - 必选 html文本内容
  * @param {string} title - 可选 模版文档名称，默认为“模版文档”
  * @param {string} cover - 可选 预览的图片地址，默认会截图对应文档页
+ * @param {string} docId - 必须 被设置为模版的文档Id
  * @param {string} url - 必选 被选作模版的文档地址
  */
 router.post('/api/create/template', async (ctx) => {
-  const { html, title, cover, url, uuid } = ctx.request.body;
+  const { html, title, cover, docId, url, uuid } = ctx.request.body;
   const now = Date.now().toString();
   const templateId = fnv.hash(`template-${uuid}-${now}`, 64).str();
   const token = ctx.cookies.get('token');
   const hostname = isDevelopment ? 'http://127.0.0.1:3000' : 'https://www.bigxigua.net';
+  // 查询当前文档是否已经被设置为模版了，不允许重复设置
+  const [, result] = await templateModel.find(`uuid='${uuid}' AND doc_id='${docId}'`);
+  if (Array.isArray(result) && result.length) {
+    ctx.body = handleCustomError({ message: '当前文档已是模版' });
+    return;
+  }
+  // 设置当前文档的is_template属性为1
+  const [error, data] = await docModel.update({ is_template: '1' }, `uuid='${uuid}' AND doc_id='${docId}'`);
+  if (error || !data) {
+    log(`${uuid}设置文档${docId}为模版失败`, 'red');
+    ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
+    return;
+  }
   try {
     pageresOptions.cookies[0] = {
       name: 'token',
@@ -53,6 +68,7 @@ router.post('/api/create/template', async (ctx) => {
       title,
       url,
       html,
+      doc_id: docId,
       markdown: '',
       uuid,
       cover: cover || `${hostname}/file/images/${templateId}.png`,

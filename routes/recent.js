@@ -8,7 +8,7 @@ const docModel = CreateMysqlModel('doc');
 const spaceModel = CreateMysqlModel('space');
 
 const SPACE_ACTIONS = ['CreateSpace', 'UpdateSpace', 'DeleteSpace'];
-const DOC_ACTIONS = ['CreateEdit', 'UpdateEdit', 'LogicalDeleteEdit', 'PhysicalDeleteEdit', 'Share', 'RestoreEdit'];
+const DOC_ACTIONS = ['CreateEdit', 'UpdateEdit', 'Edit', 'LogicalDeleteEdit', 'PhysicalDeleteEdit', 'Share', 'RestoreEdit'];
 
 /**
  * 新增最新使用文档
@@ -29,6 +29,9 @@ router.post('/api/add/recent', async (ctx) => {
 	const isAboutSpace = SPACE_ACTIONS.includes(type);
 	const isAboutDoc = DOC_ACTIONS.includes(type);
 
+	console.log('isAboutSpace:', isAboutSpace);
+	console.log('isAboutDoc:', isAboutDoc);
+	console.log('type:', type);
 	if (isAboutDoc) {
 		sql = `uuid='${uuid}' AND doc_id='${doc_id}' AND space_id='${space_id}'`;
 	} else if (isAboutSpace) {

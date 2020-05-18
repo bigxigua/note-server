@@ -7,13 +7,18 @@ const { getIn, delay } = require('../util/util');
 const shortcutModel = CreateMysqlModel('shortcut');
 
 /**
- * 创建一个快捷入口
+ * 将文档或者空间添加到首页的快捷入口
+ * @param {string} title - 可选 模版文档名称，默认为“模版文档”
+ * @param {string} type - 可选 类型[ENUM('XIGUA_DOC', 'XIGUA_SPACE', 'NORMAL')] 默认XIGUA_DOC
+ * @param {string} docId - 必须 被设置为模版的文档Id
+ * @param {string} url - 必选 被选作模版的文档地址
  */
 router.post('/api/create/shortcut', async (ctx) => {
   const { body } = ctx.request;
   const { title, url, type, uuid } = body;
   const now = String(Date.now());
   const shortcutId = fnv.hash(`${uuid}-${now}-${title}-${url}`, 64).str();
+  // TODO如果为XIGUA_DOC则判断当前shortcut是否存在，shortcut表新增docIdOrSpaceId
   const [, result] = await shortcutModel.execute(`select max(order_num) from shortcut`);
   const orderNum = getIn(result, [0, 'max(order_num)'], 0) + 1;
   const [error, data] = await shortcutModel.create({

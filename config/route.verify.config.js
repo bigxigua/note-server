@@ -88,7 +88,7 @@ module.exports = {
   'api/create/template': {
     match: /^api\/create\/template(\/)?$/,
     methods: 'POST',
-    notEmptyParamsName: ['html', 'url'],
+    notEmptyParamsName: ['html', 'url', 'docId'],
     access: 'SUPER_ADMIN',
     needToVerifyUser: true,
   },
@@ -160,6 +160,12 @@ module.exports = {
     match: /^api\/deleteIp(\/)?$/,
     methods: 'POST',
     notEmptyParamsName: ['ip'],
+    needToVerifyUser: true,
+  },
+  'api/deploy/note-server': {
+    match: /^api\/deploy\/note-server(\/)?$/,
+    methods: 'POST',
+    notEmptyParamsName: [],
     needToVerifyUser: true,
   },
 };
