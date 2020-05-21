@@ -17,7 +17,7 @@ const spaceModel = CreateMysqlModel('space');
  * @param {string} html - 可选 文档内容，基于模版创建时用到
  * @param {string} scene - 可选 节点类型，目前仅支持普通文档doc和空节点，empty_node
  * @param {object} catalogInfo - 可选 指定在哪个目录下创建该文档
- * 								{string} folderDocId 父节点docId
+ * 								{string} folderDocId 父节点docId,对应结构化catalog就是当前新增目录的上一个目录
  * 								{number} level 层级
  * @return {object} 返回docId
  */
@@ -59,7 +59,7 @@ router.post('/api/create/doc', async (ctx) => {
 		});
 		return;
 	}
-	const [error, data] = await docModel.create({
+	const docInfo = {
 		space_id,
 		updated_at: now,
 		updated_at_timestamp: now.getTime(),
@@ -75,13 +75,14 @@ router.post('/api/create/doc', async (ctx) => {
 		uuid,
 		status: '1',
 		doc_id: docId
-	});
+	};
+	const [error, data] = await docModel.create(docInfo);
 	if (error || !data) {
 		ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
 		return;
 	}
 	// 新增完之后更新space的catalog字段
-	ctx.body = serializReuslt('SUCCESS', { docId });
+	ctx.body = serializReuslt('SUCCESS', { docId, docInfo });
 });
 
 /**

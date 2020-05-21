@@ -108,7 +108,7 @@ module.exports = {
   'api/create/shortcut': {
     match: /^api\/create\/shortcut(\/)?$/,
     methods: 'POST',
-    notEmptyParamsName: ['title', 'url', 'type'],
+    notEmptyParamsName: ['title', 'url', 'type', 'signId'],
     access: 'SUPER_ADMIN',
     needToVerifyUser: true,
   },

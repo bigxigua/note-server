@@ -10,15 +10,27 @@ const shortcutModel = CreateMysqlModel('shortcut');
  * 将文档或者空间添加到首页的快捷入口
  * @param {string} title - 可选 模版文档名称，默认为“模版文档”
  * @param {string} type - 可选 类型[ENUM('XIGUA_DOC', 'XIGUA_SPACE', 'NORMAL')] 默认XIGUA_DOC
- * @param {string} docId - 必须 被设置为模版的文档Id
+ * @param {string} signId - 必须 如果是文档就是传docId,空间就传space_id,其他链接就传链接名称
  * @param {string} url - 必选 被选作模版的文档地址
  */
 router.post('/api/create/shortcut', async (ctx) => {
   const { body } = ctx.request;
-  const { title, url, type, uuid } = body;
+  const { title, url, type, uuid, signId } = body;
   const now = String(Date.now());
   const shortcutId = fnv.hash(`${uuid}-${now}-${title}-${url}`, 64).str();
-  // TODO如果为XIGUA_DOC则判断当前shortcut是否存在，shortcut表新增docIdOrSpaceId
+  if (signId) {
+    const [, data] = await shortcutModel.find(`uuid='${uuid}' AND sign_id='${signId}'`);
+    if (Array.isArray(data) && data.length) {
+      ctx.body = handleCustomError({ message: '该文档/空间/链接已被添加，请勿重复添加' });
+      return;
+    }
+  }
+  // TODO 如果type为XIGUA_DOC|XIGUA_SPACE需要更新对应到文档或空间
+  // const [error, data] = await docModel.update({ is_template: '1' }, `uuid='${uuid}' AND doc_id='${docId}'`);
+  // if (error || !data) {
+  //   ctx.body =handleCustomError({ message: '更新' });
+  //   return;
+  // }
   const [, result] = await shortcutModel.execute(`select max(order_num) from shortcut`);
   const orderNum = getIn(result, [0, 'max(order_num)'], 0) + 1;
   const [error, data] = await shortcutModel.create({
@@ -26,6 +38,7 @@ router.post('/api/create/shortcut', async (ctx) => {
     title,
     url,
     type,
+    sign_id: signId,
     order_num: orderNum,
     shortcut_id: shortcutId,
     created_at: now,
