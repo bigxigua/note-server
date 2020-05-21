@@ -18,13 +18,13 @@ router.post('/api/create/shortcut', async (ctx) => {
   const { title, url, type, uuid, signId } = body;
   const now = String(Date.now());
   const shortcutId = fnv.hash(`${uuid}-${now}-${title}-${url}`, 64).str();
-  if (signId) {
-    const [, data] = await shortcutModel.find(`uuid='${uuid}' AND sign_id='${signId}'`);
-    if (Array.isArray(data) && data.length) {
-      ctx.body = handleCustomError({ message: '该文档/空间/链接已被添加，请勿重复添加' });
-      return;
-    }
-  }
+  // if (signId) {
+  //   const [, data] = await shortcutModel.find(`uuid='${uuid}' AND sign_id='${signId}'`);
+  //   if (Array.isArray(data) && data.length) {
+  //     ctx.body = handleCustomError({ message: '该文档/空间/链接已被添加，请勿重复添加' });
+  //     return;
+  //   }
+  // }
   // TODO 如果type为XIGUA_DOC|XIGUA_SPACE需要更新对应到文档或空间
   // const [error, data] = await docModel.update({ is_template: '1' }, `uuid='${uuid}' AND doc_id='${docId}'`);
   // if (error || !data) {
