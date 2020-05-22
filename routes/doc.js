@@ -26,6 +26,7 @@ router.post('/api/create/doc', async (ctx) => {
 	const { space_id, title, html, scene = 'DOC', catalogInfo = {}, uuid } = body;
 	const now = new Date();
 	const docId = fnv.hash(`${space_id}-${uuid}-${now}`, 64).str();
+	const { folderDocId, level } = catalogInfo;
 	const [, spaceInfo] = await spaceModel.find(`uuid='${uuid}' AND space_id='${space_id}'`);
 	if (!Array.isArray(spaceInfo) || !spaceInfo[0] || !spaceInfo[0].catalog) {
 		ctx.body = handleCustomError({ message: '文档只能新建在有效的空间内' });
@@ -36,18 +37,20 @@ router.post('/api/create/doc', async (ctx) => {
 		ctx.body = handleCustomError({ message: '目录信息有误，请另选空间' });
 		return;
 	}
-	// TODO 插入位置作为参数处理
 	let index = catalog.length;
-	if (catalogInfo.folderDocId) {
+
+	if (folderDocId === 'top') {
+		index = 0;
+	} else if (folderDocId) {
 		const __index__ = catalog.findIndex(n => n.docId === catalogInfo.folderDocId);
 		if (__index__ !== -1) {
 			index = __index__;
 		}
 	}
-	const level = parseInt(catalogInfo.level) || 0;
+
 	catalog.splice(index + 1, 0, {
 		docId,
-		level,
+		level: parseInt(level) || 0,
 		status: '1',
 		type: scene.toLocaleUpperCase()
 	});

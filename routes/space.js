@@ -1,5 +1,5 @@
 const router = require('koa-router')();
-const { serializReuslt } = require('../util/serializable');
+const { serializReuslt, handleCustomError } = require('../util/serializable');
 const CreateMysqlModel = require('../controller/sqlController');
 const fnv = require('fnv-plus');
 
@@ -92,9 +92,14 @@ router.post('/api/spaces/update', async (ctx) => {
 router.post('/api/spaces/delete', async (ctx) => {
   const { user: { uuid }, body: { space_id } } = ctx.request;
   const sql = `uuid='${uuid}' AND space_id='${space_id}'`;
-  const results = await Promise.all([spaceModel.delete(sql), docModel.delete(sql)]);
-  if (results[0] && results[0][1] && results[0][1].affectedRows > 0 &&
-    results[1] && results[1][1]) {
+  // 查询当前空间下是否还有文档，如果有则报错
+  const [, docs] = await docModel.find(`uuid='${uuid}' AND space_id='${space_id}'`);
+  if (Array.isArray(docs) && docs.length > 0) {
+    ctx.body = handleCustomError({ message: '该空间下还存在文档，不可以删除，请先删除该空间下的所有文档' });
+    return;
+  }
+  const [, result] = await spaceModel.delete(sql)
+  if (result && result.affectedRows > 0) {
     ctx.body = serializReuslt('SUCCESS', { STATUS: 'OK' });
   } else {
     ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
