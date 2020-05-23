@@ -22,18 +22,20 @@ const spaceModel = CreateMysqlModel('space');
  * @return {object} 返回docId
  */
 router.post('/api/create/doc', async (ctx) => {
-	const { body } = ctx.request;
+	const { body, url } = ctx.request;
 	const { space_id, title, html, scene = 'DOC', catalogInfo = {}, uuid } = body;
 	const now = new Date();
 	const docId = fnv.hash(`${space_id}-${uuid}-${now}`, 64).str();
 	const { folderDocId, level } = catalogInfo;
 	const [, spaceInfo] = await spaceModel.find(`uuid='${uuid}' AND space_id='${space_id}'`);
 	if (!Array.isArray(spaceInfo) || !spaceInfo[0] || !spaceInfo[0].catalog) {
+		global.logger.error(`请求返回：UUID:${uuid};URL:${url};code: SPACE_NOT_INVALID`);
 		ctx.body = handleCustomError({ message: '文档只能新建在有效的空间内' });
 		return;
 	}
 	const catalog = JSON.parse(getIn(spaceInfo, [0, 'catalog'], '[]'));
 	if (!Array.isArray(catalog) || catalog.length === 0) {
+		global.logger.error(`请求返回：UUID:${uuid};URL:${url};code: SPACE_CATALOG_NOT_EXIST`);
 		ctx.body = handleCustomError({ message: '目录信息有误，请另选空间' });
 		return;
 	}
@@ -57,6 +59,7 @@ router.post('/api/create/doc', async (ctx) => {
 	const [, result] = await spaceModel.update({ catalog: JSON.stringify(catalog) }, `uuid='${uuid}' AND space_id='${space_id}'`);
 
 	if (!getIn(result, ['changedRows'])) {
+		global.logger.error(`请求返回：UUID:${uuid};URL:${url};code: SAPCE_SQL_UPDATE_ERROR`);
 		ctx.body = handleCustomError({
 			message: '更新目录失败，请重试'
 		});
@@ -162,7 +165,7 @@ router.post('/api/doc/update', async (ctx) => {
 		draft_update_at: now,
 		updated_at: now
 	};
-	['title', 'markdown', 'html', 'markdown_draft', 'html_draft', 'title_draft', 'status', 'abstract', 'cover'].forEach(k => {
+	['title', 'markdown', 'html', 'markdown_draft', 'html_draft', 'title_draft', 'status', 'abstract', 'cover', 'is_share', 'is_shortcut', 'is_template'].forEach(k => {
 		if (body.hasOwnProperty(k)) {
 			updateParams[k] = body[k];
 		}
@@ -172,7 +175,7 @@ router.post('/api/doc/update', async (ctx) => {
 		ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
 		return;
 	}
-	// 如果status='0'，修改对应space表的catalog字段。
+	// 如果status='0'，status字段为0表示伪删除修改对应space表的catalog字段。
 	if (['0', '1'].includes(body.status)) {
 		const sql = `uuid='${user.uuid}' AND space_id='${body.space_id}'`;
 		const [, spaceInfo] = await spaceModel.find(sql);
@@ -188,6 +191,22 @@ router.post('/api/doc/update', async (ctx) => {
 		}
 	}
 	ctx.body = serializReuslt('SUCCESS', { STATUS: 'OK' });
+});
+
+/**
+* 通过文档id获取被分享文档详情
+* @param {string} docId - 文档id
+*/
+router.get('/api/doc/share', async (ctx) => {
+	const { query: { docId } } = ctx.request;
+	const [, docInfo] = await docModel.find(`doc_id='${docId}'`);
+	const id = getIn(docInfo, ['0', 'doc_id']);
+	const share = getIn(docInfo, ['0', 'is_share']);
+	if (id && share === '1') {
+		ctx.body = serializReuslt('SUCCESS', docInfo);
+	} else {
+		ctx.body = handleCustomError({ message: '该文档不存在或者未被分享' });
+	}
 });
 
 /**

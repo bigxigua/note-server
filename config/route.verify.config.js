@@ -12,11 +12,11 @@ module.exports = {
     access: 'SUPER_ADMIN',
     needToVerifyUser: true,
   },
-  'api/doc/detail': {
-    match: /^api\/doc\/detail(\/)?$/,
+  'api/doc/share': {
+    match: /^api\/doc\/share(\/)?$/,
     methods: 'GET',
-    notEmptyParamsName: ['doc_id'],
-    needToVerifyUser: true,
+    notEmptyParamsName: ['docId'],
+    needToVerifyUser: false,
   },
   'api/doc/update': {
     match: /^api\/doc\/update(\/)?$/,

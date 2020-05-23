@@ -14,6 +14,8 @@ const koaBody = require('koa-body');
 const logger = require('koa-logger');
 const cors = require('koa-cors');
 
+const log4js = require('./util/log4js');
+
 // route
 const login = require('./routes/login');
 const register = require('./routes/register');
@@ -25,6 +27,9 @@ const template = require('./routes/template');
 const shortcut = require('./routes/shortcut');
 const search = require('./routes/search');
 const admin = require('./routes/admin');
+
+global.logger = log4js.logger;
+// httpLogger = log4js.httpLogger;
 
 // middleware
 const verify = require('./middleware/verify');
@@ -61,6 +66,7 @@ app.use(async (ctx, next) => {
   const ms = new Date() - start;
   console.log(`${ctx.method} ${ctx.url} - ${ms}ms`)
 });
+// app.use(httpLogger);
 
 // routes
 app.use(login.routes(), login.allowedMethods());

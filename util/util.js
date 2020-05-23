@@ -12,6 +12,15 @@ module.exports = {
 	isArray: (list) => {
 		return Array.isArray(list) && list.length > 0;
 	},
+	safeStringify(obj) {
+		let str = '';
+		try {
+			str = JSON.stringify(obj);
+		} catch (error) {
+
+		}
+		return str;
+	},
 	// 防空取参
 	getIn: (data, array, initial = null) => {
 		let obj = Object.assign({}, data);

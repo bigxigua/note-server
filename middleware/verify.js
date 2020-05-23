@@ -5,6 +5,7 @@ const { JWT_KEY, isDevelopment } = require('../config/server-config');
 const VERIFY_RULES = require('../config/route.verify.config');
 const jwt = require('jsonwebtoken');
 const userController = require('../controller/user');
+const { safeStringify } = require('../util/util');
 
 // 需要开放权限的uuid
 const OPEN_UUIDS = ['1ojwj6x7payrz'];
@@ -70,6 +71,10 @@ module.exports = function () {
 			ctx.body = serializReuslt('PARAM_NOT_COMPLETE');
 			return;
 		}
+		if (!needToVerifyUser) {
+			await next();
+			return;
+		}
 		let jwtVerifyResult = {}
 		try {
 			jwtVerifyResult = jwt.verify(token, JWT_KEY) || {};
@@ -83,7 +88,6 @@ module.exports = function () {
 		}
 		// 获取ips
 		const ips = await getIps();
-		console.log('realIp=====>>>', realIp);
 		// 未拥有该操作的权限
 		if (!isDevelopment
 			&& access === 'SUPER_ADMIN'
@@ -103,6 +107,10 @@ module.exports = function () {
 		ctx.request.query.uuid = uuid;
 		ctx.request.query.__realIp__ = realIp;
 		ctx.request.body.__realIp__ = realIp;
+
+		const params = safeStringify(request[method === 'POST' ? 'body' : 'query']);
+
+		global.logger.info(`收到来自请求：ACCOUNT:${user[0].account};UUID:${uuid};REAL_IP:${realIp};PATH：${url};METHOD:${method};PARAMS:${params}`);
 		await next();
 	}
 }
