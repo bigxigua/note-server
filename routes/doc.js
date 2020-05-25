@@ -231,13 +231,14 @@ router.get('/api/space/docs', async (ctx) => {
 });
 
 /**
- * 删除文档
+ * 删除文档(也是逻辑删除，为了区分update接口是因为这个要更新space的catalog而且修改doc的status为-1
  * 支持同时删除多个文档，多个时已应为逗号分隔
  */
 router.post('/api/doc/delete', async (ctx) => {
+	// ctx.body = handleCustomError({ message: '该接口已废弃' });
 	const { body: { doc_id = '', space_id = '', uuid } } = ctx.request;
 	const docId = doc_id.split(',').map(n => `'${n}'`).join(',');
-	const [error, data] = await docController.deleteDoc(`uuid='${uuid}' AND doc_id in (${docId})`);
+	const [error, data] = await docModel.update({ status: '-1' }, `uuid='${uuid}' AND doc_id in (${docId})`);
 	// 删除时也要删除掉对应space表的catalog对应的项
 	if (!error && data && data.affectedRows > 0) {
 		const sql = `uuid='${uuid}' AND space_id='${space_id}'`;
