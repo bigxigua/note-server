@@ -28,10 +28,6 @@ router.post('/api/add/recent', async (ctx) => {
 
 	const isAboutSpace = SPACE_ACTIONS.includes(type);
 	const isAboutDoc = DOC_ACTIONS.includes(type);
-
-	console.log('isAboutSpace:', isAboutSpace);
-	console.log('isAboutDoc:', isAboutDoc);
-	console.log('type:', type);
 	if (isAboutDoc) {
 		sql = `uuid='${uuid}' AND doc_id='${doc_id}' AND space_id='${space_id}'`;
 	} else if (isAboutSpace) {

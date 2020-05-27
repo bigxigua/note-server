@@ -28,7 +28,7 @@ module.exports = {
   'api/doc/delete': {
     match: /^api\/doc\/delete(\/)?$/,
     methods: 'POST',
-    notEmptyParamsName: ['doc_id', 'space_id'],
+    notEmptyParamsName: ['docId'],
     access: 'SUPER_ADMIN',
     needToVerifyUser: true,
   },

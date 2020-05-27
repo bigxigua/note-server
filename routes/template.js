@@ -5,7 +5,7 @@ const { cookieConfig, isDevelopment } = require('../config/server-config');
 const fnv = require('fnv-plus');
 const Pageres = require('../util/pageres');
 const path = require('path');
-const { log } = require('../util/util');
+const { log, getIn } = require('../util/util');
 const templateModel = CreateMysqlModel('template');
 const docModel = CreateMysqlModel('doc');
 const destDir = path.resolve(__dirname, '../../file-uploader/upload/file/images/');
@@ -17,7 +17,7 @@ const pageresOptions = {
   crop: true, // 裁切到设定的高度
   cookies: [], // 转到要使用Cookie的网站，然后将其从DevTools复制粘贴。
   userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.100 Safari/537.36', // Custom user agent
-  hide: ['.article-header', '.article-header_right', '.article-header_left', '.bookcatalog-wrapper'], // 隐藏与CSS选择器匹配的DOM元素数组。
+  hide: ['.article-header_right'], // 隐藏与CSS选择器匹配的DOM元素数组。
 };
 
 /**
@@ -105,9 +105,21 @@ router.post('/api/templates', async (ctx) => {
  */
 router.post('/api/delete/template', async (ctx) => {
   const { body: { uuid, templateId } } = ctx.request;
-  const [error, data] = await templateModel.delete(`uuid='${uuid}' AND template_id='${templateId}'`);
+  const findTemplateSql = `uuid='${uuid}' AND template_id='${templateId}'`;
+  const [, templateInfo] = await templateModel.find(findTemplateSql);
+  const [error, data] = await templateModel.delete(findTemplateSql);
+  const docId = getIn(templateInfo, ['0', 'doc_id']);
   if (!error && data && data.affectedRows > 0) {
-    ctx.body = serializReuslt('SUCCESS', { STATUS: 'OK' });
+    await templateModel.find(findTemplateSql);
+    try {
+      if (docId) {
+        await docModel.update({ is_template: '0' }, `uuid='${uuid}' AND doc_id='${docId}'`);
+      }
+    } catch (error) {
+      global.logger.error(`/api/delete/template/：UUID:${uuid};URL:/api/delete/template;code: SET_DOC_IS_TEMPLATE_FAIL`);
+    } finally {
+      ctx.body = serializReuslt('SUCCESS', { STATUS: 'OK' });
+    }
     return;
   }
   ctx.body = serializReuslt('SYSTEM_INNER_ERROR');

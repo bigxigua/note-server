@@ -21,6 +21,17 @@ module.exports = {
 		}
 		return str;
 	},
+	safeParse(str, defaultValue = {}) {
+		if (!str || typeof str !== 'string') {
+			return str || defaultValue;
+		}
+		let result = defaultValue;
+		try {
+			result = JSON.parse(str);
+		} catch (error) {
+		}
+		return result;
+	},
 	// 防空取参
 	getIn: (data, array, initial = null) => {
 		let obj = Object.assign({}, data);

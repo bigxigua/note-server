@@ -5,7 +5,7 @@ const spaceController = require('../controller/space');
 const { serializReuslt, handleCustomError } = require('../util/serializable');
 const { hostname } = require('../config/server-config');
 const fnv = require('fnv-plus');
-const { getIn, isArray, log } = require('../util/util');
+const { getIn, isArray, safeParse } = require('../util/util');
 const docModel = CreateMysqlModel('doc');
 const spaceModel = CreateMysqlModel('space');
 
@@ -25,7 +25,7 @@ router.post('/api/create/doc', async (ctx) => {
 	const { body, url } = ctx.request;
 	const { space_id, title, html, scene = 'DOC', catalogInfo = {}, uuid } = body;
 	const now = new Date();
-	const docId = fnv.hash(`${space_id}-${uuid}-${now}`, 64).str();
+	const docId = fnv.hash(`${space_id}-${uuid}-${now.getTime()}`, 64).str();
 	const { folderDocId, level } = catalogInfo;
 	const [, spaceInfo] = await spaceModel.find(`uuid='${uuid}' AND space_id='${space_id}'`);
 	if (!Array.isArray(spaceInfo) || !spaceInfo[0] || !spaceInfo[0].catalog) {
@@ -182,11 +182,13 @@ router.post('/api/doc/update', async (ctx) => {
 		const catalog = JSON.parse(getIn(spaceInfo, [0, 'catalog'], '[]'));
 		if (isArray(catalog)) {
 			const i = catalog.findIndex(n => n.docId === body.doc_id);
-			catalog[i].status = body.status;
-			const [, info] = await spaceModel.update({ catalog: JSON.stringify(catalog) }, sql);
-			if (getIn(info, ['affectedRows'], 0) < 1) {
-				ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
-				return;
+			if (i !== -1) {
+				catalog[i].status = body.status;
+				const [, info] = await spaceModel.update({ catalog: JSON.stringify(catalog) }, sql);
+				if (getIn(info, ['affectedRows'], 0) < 1) {
+					ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
+					return;
+				}
 			}
 		}
 	}
@@ -231,34 +233,47 @@ router.get('/api/space/docs', async (ctx) => {
 });
 
 /**
- * 删除文档(也是逻辑删除，为了区分update接口是因为这个要更新space的catalog而且修改doc的status为-1
- * 支持同时删除多个文档，多个时已应为逗号分隔
+ * 如果当前文档是目录则不可删除
+ * 不支持批量删除
+ * 伪删除，同时修改对应空间的目录（移除该文档）
+ * @param {string} doc_id - 文档id
  */
 router.post('/api/doc/delete', async (ctx) => {
-	// ctx.body = handleCustomError({ message: '该接口已废弃' });
-	const { body: { doc_id = '', space_id = '', uuid } } = ctx.request;
-	const docId = doc_id.split(',').map(n => `'${n}'`).join(',');
-	const [error, data] = await docModel.update({ status: '-1' }, `uuid='${uuid}' AND doc_id in (${docId})`);
-	// 删除时也要删除掉对应space表的catalog对应的项
-	if (!error && data && data.affectedRows > 0) {
-		const sql = `uuid='${uuid}' AND space_id='${space_id}'`;
-		const [, spaceInfo] = await spaceModel.find(sql);
-		const catalog = JSON.parse(getIn(spaceInfo, [0, 'catalog'], '[]'));
-		if (isArray(catalog)) {
-			doc_id.split(',').forEach(id => {
-				const i = catalog.findIndex(n => n.docId === id);
-				catalog.splice(i, 1);
-			});
-			const [, info] = await spaceModel.update({ catalog: JSON.stringify(catalog) }, sql);
-			if (getIn(info, ['affectedRows'], 0) < 1) {
-				ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
-				return;
+	const { body: { docId = '', uuid } } = ctx.request;
+	const [, result] = await docModel.find(`uuid='${uuid}' AND doc_id='${docId}'`);
+	const { space_id: spaceId, scene } = getIn(result, ['0']);
+	if (!spaceId) {
+		return ctx.body = handleCustomError({ message: '该文档不存在或已被删除' });
+	}
+	const [, res] = await spaceModel.find(`uuid='${uuid}' AND space_id='${spaceId}'`);
+	const catalog = safeParse(getIn(res, ['0', 'catalog']), []);
+	if (!Array.isArray(catalog) || catalog.length <= 1) {
+	} else {
+		const curIndex = catalog.findIndex(n => n.docId === docId);
+		const curCatalog = catalog[curIndex];
+		const nextCatalog = catalog[curIndex + 1];
+		// 下一个的level比当前的大表示是当前的子文档，存在子文档不可删除
+		if (curCatalog && nextCatalog && nextCatalog.level > curCatalog.level) {
+			return ctx.body = handleCustomError({ message: '该文档下还有子文档，请先删除子文档后再尝试删除该文档' });
+		}
+		// 当前目录存在则更新空间目录
+		if (curCatalog) {
+			const newCatalog = catalog.reduce((p, v) => {
+				(v.docId !== docId) && p.push(v);
+				return p;
+			}, []);
+			const [, data] = await spaceModel.update({ catalog: JSON.stringify(newCatalog) }, `uuid='${uuid}' AND space_id='${spaceId}'`);
+			if (getIn(data, ['changedRows']) <= 0) {
+				return ctx.body = handleCustomError({ message: '更新目录失败，请重试' });
 			}
 		}
-		ctx.body = serializReuslt('SUCCESS', { STATUS: 'OK' });
-	} else {
-		ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
 	}
+	// 修改文档status为-1
+	const [, resp] = await docModel.update({ status: '-1' }, `uuid='${uuid}' AND doc_id='${docId}'`);
+	if (getIn(resp, ['changedRows']) <= 0) {
+		return ctx.body = handleCustomError({ message: '删除文档失败' });
+	}
+	ctx.body = serializReuslt('SUCCESS', { STATUS: 'OK' });
 });
 
 module.exports = router;

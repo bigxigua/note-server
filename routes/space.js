@@ -13,7 +13,7 @@ router.post('/api/create/space', async (ctx) => {
   const { body } = ctx.request;
   const { description, name, scene, public, uuid } = body;
   const now = new Date(Date.now());
-  const spaceId = fnv.hash(`${uuid}-${now}-${name}`, 64).str();
+  const spaceId = fnv.hash(`${uuid}-${now.getTime()}-${name}`, 64).str();
   const [error, data] = await spaceModel.create({
     created_at: now,
     updated_at: now,
