@@ -29,11 +29,9 @@ router.post('/api/login', async (ctx) => {
             let verifyResult = {};
             try {
                 verifyResult = await jwt.verify(token, JWT_KEY) || {};
-                console.log('======>>', verifyResult);
             } catch (error) {
                 console.log('[jwt验证失败]', error);
             }
-            console.log('verifyResult', verifyResult);
             if (verifyResult.uuid) {
                 uuid = verifyResult.uuid;
                 userLoginVersion = verifyResult.userLoginVersion;

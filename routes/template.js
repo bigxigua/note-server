@@ -21,31 +21,32 @@ const pageresOptions = {
 };
 
 /**
- * 创建一个文档
- * @param {string} html - 必选 html文本内容
- * @param {string} title - 可选 模版文档名称，默认为“模版文档”
- * @param {string} cover - 可选 预览的图片地址，默认会截图对应文档页
+ * 将西瓜文档设置为模版
  * @param {string} docId - 必须 被设置为模版的文档Id
- * @param {string} url - 必选 被选作模版的文档地址
  */
 router.post('/api/create/template', async (ctx) => {
-  const { html, title, cover, docId, url, uuid } = ctx.request.body;
+  const { docId, uuid } = ctx.request.body;
   const now = Date.now().toString();
   const templateId = fnv.hash(`template-${uuid}-${now}`, 64).str();
   const token = ctx.cookies.get('token');
   const hostname = isDevelopment ? 'http://127.0.0.1:3000' : 'https://www.bigxigua.net';
-  // 查询当前文档是否已经被设置为模版了，不允许重复设置
-  const [, result] = await templateModel.find(`uuid='${uuid}' AND doc_id='${docId}'`);
-  if (Array.isArray(result) && result.length) {
-    ctx.body = handleCustomError({ message: '当前文档已是模版' });
-    return;
+  // 查询文档信息
+  const [, docInfos] = await docModel.find(`uuid='${uuid}' AND doc_id='${docId}'`);
+  const docInfo = getIn(docInfos, ['0']);
+  // 文档不存在
+  if (!docInfo) {
+    return ctx.body = handleCustomError({ message: '当前文档不存在' });
+  }
+  const { is_template, title, html, url } = docInfo;
+  // 已是模版
+  if (is_template === '1') {
+    return ctx.body = handleCustomError({ message: '当前文档已是模版' });
   }
   // 设置当前文档的is_template属性为1
   const [error, data] = await docModel.update({ is_template: '1' }, `uuid='${uuid}' AND doc_id='${docId}'`);
+
   if (error || !data) {
-    log(`${uuid}设置文档${docId}为模版失败`, 'red');
-    ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
-    return;
+    return ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
   }
   try {
     pageresOptions.cookies[0] = {
@@ -56,7 +57,6 @@ router.post('/api/create/template', async (ctx) => {
       httpOnly: true
     };
     pageresOptions.filename = templateId;
-    log(pageresOptions.cookies[0], 'green');
     await new Pageres(pageresOptions)
       .src(url, ['800x1280'])
       .dest(destDir)
@@ -71,7 +71,7 @@ router.post('/api/create/template', async (ctx) => {
       doc_id: docId,
       markdown: '',
       uuid,
-      cover: cover || `${hostname}/file/images/${templateId}.png`,
+      cover: `${hostname}/file/images/${templateId}.png`,
       status: '1',
     });
     if (error || !data) {

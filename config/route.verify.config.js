@@ -88,7 +88,7 @@ module.exports = {
   'api/create/template': {
     match: /^api\/create\/template(\/)?$/,
     methods: 'POST',
-    notEmptyParamsName: ['html', 'url', 'docId'],
+    notEmptyParamsName: ['docId'],
     access: 'SUPER_ADMIN',
     needToVerifyUser: true,
   },
