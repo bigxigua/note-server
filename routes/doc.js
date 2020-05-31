@@ -8,6 +8,7 @@ const fnv = require('fnv-plus');
 const { getIn, isArray, safeParse } = require('../util/util');
 const docModel = CreateMysqlModel('doc');
 const spaceModel = CreateMysqlModel('space');
+const model = CreateMysqlModel();
 
 
 /**
@@ -110,48 +111,41 @@ router.get('/api/docs', async (ctx) => {
 			docId = ''
 		}
 	} = ctx.request;
-	const commonSql = `uuid='${uuid}'${q ? ` AND title LIKE '%${decodeURIComponent(q)}%'` : ' '}AND scene='doc' `;
-	const pageSql = `limit ${(pageNo - 1) * pageSize},${pageSize}`;
-	const orderSql = `ORDER BY id DESC`;
-	const sqlMapType = {
-		all: `${commonSql}${orderSql} ${pageSql}`,
-		updated: `${commonSql}AND title_draft='' AND markdown_draft='' AND status='1' ${pageSql}`,
-		un_updated: `${commonSql}AND title_draft!='' OR markdown_draft!='' AND status='1' ${pageSql}`,
-		delete: `${commonSql}AND status='0' ${pageSql}`,
-		detail: `uuid='${uuid}' AND doc_id='${docId}'`
-	};
-	if (!sqlMapType[type]) {
-		ctx.body = serializReuslt('PARAM_IS_INVALID');
-		return;
+	const detailSql = docId ? ` AND doc_id='${docId}'` : '';
+	const findDocSql = `SELECT * FROM doc a WHERE CONCAT(a.title, a.html) like '%${q}%' AND uuid='${uuid}'${detailSql} ORDER BY id DESC`;
+	let [, docs] = await model.execute(findDocSql);
+	if (!Array.isArray(docs) && !docs.length) {
+		return ctx.body = handleCustomError({ message: '查询无结果' });
 	}
-	const [error, data] = await docModel.find(sqlMapType[type]);
-	if (error || !Array.isArray(data)) {
-		ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
-		return;
+	// 进行筛选，目前支持筛选，未更新、已更新、被删除(可恢复)
+	if (type === 'updated') {
+		docs = docs.filter(n => !n.html_draft && !n.title_draft);
+	} else if (type === 'un_updated') {
+		docs = docs.filter(n => n.html_draft || n.title_draft);
+	} else if (type === 'delete') {
+		docs = docs.filter(n => n.status === '0');
 	}
-	const getSpaceInfo = async ({ spaceId }) => {
+	// 获取对应的空间信息
+	const getSpaceInfo = async (spaceId) => {
 		const [, d] = await spaceController.findSpace(`uuid='${uuid}' AND space_id='${spaceId}'`);
 		if (Array.isArray(d) && d.length > 0 && d[0]) {
 			return d[0];
 		}
 		return null;
 	}
-	const promiseQueue = [];
-	data.forEach(n => { promiseQueue.push(getSpaceInfo({ spaceId: n.space_id })) });
-	let result = await Promise.all(promiseQueue);
-	result = result.filter(n => n);
-	if (result.length > 0) {
-		data.map(n => {
-			n.user = user;
-			for (let i = 0; i < result.length; i++) {
-				if (result[i]['space_id'] === n.space_id) {
-					n.space = result[i];
-					break;
-				}
-			}
-		});
-	}
-	ctx.body = serializReuslt('SUCCESS', data);
+	// 筛选出文档的空间id列表
+	const spaceIds = [...(new Set(docs.map(n => n.space_id)))];
+	const promiseQueue = spaceIds.map(n => getSpaceInfo(n));
+	const spaceInfos = await Promise.all(promiseQueue);
+	// 给文档加上user和space(空间信息)
+	docs = docs.map(doc => {
+		return {
+			user,
+			space: spaceInfos.filter(n => n).find(n => n.space_id === doc.space_id) || {},
+			...doc
+		};
+	});
+	ctx.body = serializReuslt('SUCCESS', docs);
 });
 
 /**
@@ -172,7 +166,7 @@ router.post('/api/doc/update', async (ctx) => {
 	});
 	const [error, data] = await docController.updateDoc(updateParams, `uuid='${user.uuid}' AND doc_id='${body.doc_id}'`);
 	if (error || !data) {
-		ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
+		ctx.body = handleCustomError({ message: '更新文档失败' });
 		return;
 	}
 	// 如果status='0'，status字段为0表示伪删除修改对应space表的catalog字段。
