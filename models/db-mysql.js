@@ -30,12 +30,10 @@ class BaseMysql {
         return new Promise((resolve, reject) => {
             this.pool.getConnection((error, connection) => {
                 if (error) {
-                    console.error('------->>>>>error', error);
                     reject(error);
                 } else {
                     connection.query(sql, params, (err, res, fields) => {
                         connection.release();
-                        console.log(sql);
                         if (err) {
                             reject(err);
                             return;
@@ -56,7 +54,6 @@ class BaseMysql {
     // 删
     delete(tableName, condition) {
         let sql = `DELETE FROM ${tableName} WHERE ${condition}`;
-        console.log(sql);
         return this.execute(sql);
     }
     // 查

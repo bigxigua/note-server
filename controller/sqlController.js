@@ -5,7 +5,7 @@ async function tryCatchWrapper(fn) {
     const data = await fn();
     return [null, data];
   } catch (error) {
-    console.log('------出错啦------', error);
+    global.logger.error(`SQL_CONTROLLER-EXECUTE-ERROR: ${JSON.stringify(error)}`);
     return Promise.resolve([error, null]);
   }
 }
@@ -13,18 +13,23 @@ async function tryCatchWrapper(fn) {
 function CreateMysqlModel(table) {
   return {
     execute(sql, params = {}) {
+      global.logger.info(`SQL_CONTROLLER-execute: ${sql}`);
       return tryCatchWrapper(async () => { return mysqlBaseModel.execute(sql, params) })
     },
     find(sql) {
+      global.logger.info(`SQL_CONTROLLER-${table}-find: ${sql}`);
       return tryCatchWrapper(async () => { return mysqlBaseModel.find(table, sql) });
     },
     create(payload) {
+      global.logger.info(`SQL_CONTROLLER-${table}-create: ${sql}`);
       return tryCatchWrapper(async () => { return mysqlBaseModel.insert(table, payload) });
     },
     update(params, where) {
+      global.logger.info(`SQL_CONTROLLER-${table}-update: ${sql}`);
       return tryCatchWrapper(async () => { return mysqlBaseModel.update(table, params, where) });
     },
     delete(where) {
+      global.logger.info(`SQL_CONTROLLER-${table}-delete: ${sql}`);
       return tryCatchWrapper(async () => { return mysqlBaseModel.delete(table, where) });
     },
   }
