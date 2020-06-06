@@ -5,6 +5,34 @@ const fnv = require('fnv-plus');
 
 const spaceModel = CreateMysqlModel('space');
 const docModel = CreateMysqlModel('doc');
+const recentModel = CreateMysqlModel('recent');
+
+async function addRecent({
+  space_name,
+  space_id,
+  doc_title,
+  doc_id,
+  uuid,
+  type,
+}) {
+  const now = Date.now();
+  // 新建文档成功后添加recent
+  try {
+    await recentModel.create({
+      uuid,
+      doc_id,
+      space_id,
+      space_name,
+      doc_title,
+      type,
+      created_at: now,
+      update_at: now
+    });
+  } catch (error) {
+    console.log('----create/doc新增recent失败-----', error);
+  }
+  return null;
+}
 
 /**
  * 创建一个空间
@@ -34,6 +62,13 @@ router.post('/api/create/space', async (ctx) => {
     ctx.body = serializReuslt('SPECIFIED_QUESTIONED_USER_NOT_EXIST');
     return;
   }
+  // 添加recent
+  await addRecent({
+    space_name: name,
+    space_id: spaceId,
+    uuid,
+    type: 'CreateSpace',
+  });
   ctx.body = serializReuslt('SUCCESS', { spaceId });
 });
 
@@ -89,8 +124,8 @@ router.post('/api/spaces/update', async (ctx) => {
 
 
 // 删除空间并同时删除该空间下的文档
-router.post('/api/spaces/delete', async (ctx) => {
-  const { user: { uuid }, body: { space_id } } = ctx.request;
+router.post('/api/space/delete', async (ctx) => {
+  const { user: { uuid }, body: { space_id, space_name } } = ctx.request;
   const sql = `uuid='${uuid}' AND space_id='${space_id}'`;
   // 查询当前空间下是否还有文档，如果有则报错
   const [, docs] = await docModel.find(`uuid='${uuid}' AND space_id='${space_id}'`);
@@ -98,8 +133,15 @@ router.post('/api/spaces/delete', async (ctx) => {
     ctx.body = handleCustomError({ message: '该空间下还存在文档，不可以删除，请先删除该空间下的所有文档' });
     return;
   }
-  const [, result] = await spaceModel.delete(sql)
+  const [, result] = await spaceModel.delete(sql);
   if (result && result.affectedRows > 0) {
+    // 添加recent
+    await addRecent({
+      space_name,
+      space_id,
+      uuid,
+      type: 'DeleteSpace',
+    });
     ctx.body = serializReuslt('SUCCESS', { STATUS: 'OK' });
   } else {
     ctx.body = serializReuslt('SYSTEM_INNER_ERROR');

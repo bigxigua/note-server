@@ -56,7 +56,7 @@ function create(code, message) {
     code
   };
 }
-exports.serializReuslt = function (status, data = null, extra) {
+exports.serializReuslt = function (status, data = null, extra = {}) {
   const {
     message,
     code
@@ -66,7 +66,7 @@ exports.serializReuslt = function (status, data = null, extra) {
     status: status === 'SUCCESS' ? 'success' : 'failed',
     message,
     code,
-    extra
+    ...extra
   }
 }
 exports.handleCustomError = function ({

@@ -78,8 +78,8 @@ module.exports = {
     access: 'SUPER_ADMIN',
     needToVerifyUser: true,
   },
-  'api/spaces/delete': {
-    match: /^api\/spaces\/delete(\/)?$/,
+  'api/space/delete': {
+    match: /^api\/space\/delete(\/)?$/,
     methods: 'POST',
     notEmptyParamsName: ['space_id'],
     access: 'SUPER_ADMIN',

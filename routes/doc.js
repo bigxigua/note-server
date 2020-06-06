@@ -5,11 +5,46 @@ const spaceController = require('../controller/space');
 const { serializReuslt, handleCustomError } = require('../util/serializable');
 const { hostname } = require('../config/server-config');
 const fnv = require('fnv-plus');
-const { getIn, isArray, safeParse } = require('../util/util');
+const { getIn, isArray, safeParse, delay } = require('../util/util');
 const docModel = CreateMysqlModel('doc');
 const spaceModel = CreateMysqlModel('space');
+const recentModel = CreateMysqlModel('recent');
 const model = CreateMysqlModel();
 
+
+const TYPE_MAP_SQL = {
+	UPDATED: `and (html_draft='' and title_draft='')`,
+	ALL: '',
+	UN_UPDATED: `and (html_draft!='' or title_draft!='')`,
+	DELETE: `and status='0'`,
+};
+
+async function addRecent({
+	space_name,
+	space_id,
+	doc_title,
+	doc_id,
+	uuid,
+	type,
+}) {
+	const now = Date.now();
+	// 新建文档成功后添加recent
+	try {
+		await recentModel.create({
+			uuid,
+			doc_id,
+			space_id,
+			space_name,
+			doc_title,
+			type,
+			created_at: now,
+			update_at: now
+		});
+	} catch (error) {
+		console.log('----create/doc新增recent失败-----', error);
+	}
+	return null;
+}
 
 /**
  * 创建一个文档
@@ -88,7 +123,15 @@ router.post('/api/create/doc', async (ctx) => {
 		ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
 		return;
 	}
-	// 新增完之后更新space的catalog字段
+	// 新建文档成功后添加recent
+	await addRecent({
+		space_name: spaceInfo.name,
+		space_id,
+		doc_title: title,
+		doc_id: docId,
+		uuid,
+		type: 'CreateEdit',
+	});
 	ctx.body = serializReuslt('SUCCESS', { docId, docInfo });
 });
 
@@ -104,26 +147,31 @@ router.get('/api/docs', async (ctx) => {
 		user,
 		query: {
 			pageNo = 1,
-			pageSize = 300,
-			type = 'all',
+			pageSize = 10,
+			type = '',
 			uuid = '',
 			q = '',
 			docId = ''
 		}
 	} = ctx.request;
-	const detailSql = docId ? ` AND doc_id='${docId}'` : '';
-	const findDocSql = `SELECT * FROM doc a WHERE CONCAT(a.title, a.html) like '%${q}%' AND uuid='${uuid}'${detailSql} ORDER BY id DESC`;
-	let [, docs] = await model.execute(findDocSql);
-	if (!Array.isArray(docs) && !docs.length) {
+	// limit sql语句
+	const limitSql = `limit ${(pageNo - 1) * pageSize},${(pageNo - 1) * pageSize + pageSize};`;
+	// 查详情时新增doc_id的where子句
+	const detailSql = docId ? ` and doc_id='${docId}'` : '';
+	// 模糊搜索时的子句
+	const searchSql = q ? `concat(a.title, a.html) like '%${q}%' and` : '';
+	// where子句
+	const sql = `a where ${searchSql} uuid='${uuid}' and status!='-1' ${TYPE_MAP_SQL[type] || ''}`;
+	let [, docs] = await model.execute(`select * from doc ${sql} ${detailSql} order by id desc ${limitSql}`);
+
+	if (!Array.isArray(docs) || !docs.length) {
 		return ctx.body = handleCustomError({ message: '查询无结果' });
 	}
-	// 进行筛选，目前支持筛选，未更新、已更新、被删除(可恢复)
-	if (type === 'updated') {
-		docs = docs.filter(n => !n.html_draft && !n.title_draft);
-	} else if (type === 'un_updated') {
-		docs = docs.filter(n => n.html_draft || n.title_draft);
-	} else if (type === 'delete') {
-		docs = docs.filter(n => n.status === '0');
+	let total = undefined;
+	// 非详情查询时获取总页数
+	if (!docId) {
+		const [, counts] = await model.execute(`select sql_calc_found_rows count(*) as count from doc ${sql}`);
+		total = getIn(counts, ['0', 'count']);
 	}
 	// 获取对应的空间信息
 	const getSpaceInfo = async (spaceId) => {
@@ -145,7 +193,10 @@ router.get('/api/docs', async (ctx) => {
 			...doc
 		};
 	});
-	ctx.body = serializReuslt('SUCCESS', docs);
+	ctx.body = serializReuslt('SUCCESS', {
+		docs,
+		total: total || docs.length
+	});
 });
 
 /**
@@ -212,10 +263,9 @@ router.get('/api/space/docs', async (ctx) => {
 	const { query: { space_id = '', uuid } } = ctx.request;
 	const [, space] = await spaceModel.find(`uuid='${uuid}' AND space_id='${space_id}'`);
 	if (!Array.isArray(space) || space.length === 0) {
-		ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
-		return;
+		return ctx.body = handleCustomError({ message: '空间不存在' });
 	}
-	const [error, data] = await docController.findDocs(`uuid='${uuid}' AND space_id='${space_id}' limit 300`);
+	const [error, data] = await docController.findDocs(`uuid='${uuid}' AND space_id='${space_id}' AND status='1' limit 300`);
 	if (error || !Array.isArray(data)) {
 		ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
 		return;
@@ -235,10 +285,12 @@ router.get('/api/space/docs', async (ctx) => {
 router.post('/api/doc/delete', async (ctx) => {
 	const { body: { docId = '', uuid } } = ctx.request;
 	const [, result] = await docModel.find(`uuid='${uuid}' AND doc_id='${docId}'`);
-	const { space_id: spaceId, scene } = getIn(result, ['0']);
+	const { space_id: spaceId, scene, title } = getIn(result, ['0']);
+
 	if (!spaceId) {
 		return ctx.body = handleCustomError({ message: '该文档不存在或已被删除' });
 	}
+	// 查询空间信息
 	const [, res] = await spaceModel.find(`uuid='${uuid}' AND space_id='${spaceId}'`);
 	const catalog = safeParse(getIn(res, ['0', 'catalog']), []);
 	if (!Array.isArray(catalog) || catalog.length <= 1) {
@@ -267,6 +319,15 @@ router.post('/api/doc/delete', async (ctx) => {
 	if (getIn(resp, ['changedRows']) <= 0) {
 		return ctx.body = handleCustomError({ message: '删除文档失败' });
 	}
+	// 删除文档成功后添加recent
+	await addRecent({
+		space_name: res[0].name,
+		space_id: spaceId,
+		doc_title: title,
+		doc_id: docId,
+		uuid,
+		type: 'PhysicalDeleteEdit',
+	});
 	ctx.body = serializReuslt('SUCCESS', { STATUS: 'OK' });
 });
 

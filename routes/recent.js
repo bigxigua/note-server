@@ -1,5 +1,5 @@
 const router = require('koa-router')();
-const { serializReuslt } = require('../util/serializable');
+const { serializReuslt, handleCustomError } = require('../util/serializable');
 const CreateMysqlModel = require('../controller/sqlController');
 const { getIn, getSafeUserInfo, getAutoUpdateParams, log } = require('../util/util');
 
@@ -48,7 +48,6 @@ router.post('/api/add/recent', async (ctx) => {
 				space_name,
 				doc_title
 			}) : getAutoUpdateParams({ space_name });
-		console.log('=----====>>>', updateParams);
 		const [, updateResult] = await recentModel.update({
 			type,
 			update_at: now,
@@ -98,15 +97,16 @@ router.post('/api/delete/recent', async (ctx) => {
 router.get('/api/recents', async (ctx) => {
 	const { query: { uuid, limit = 10 }, user } = ctx.request;
 	const [error, data] = await recentModel.find(`uuid='${uuid}' order by update_at DESC limit ${limit}`);
+
 	if (error || !Array.isArray(data)) {
-		ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
-		return;
+		return ctx.body = handleCustomError({ message: '获取最近操作记录失败', data: error });
 	}
+
 	if (data.length === 0) {
-		ctx.body = serializReuslt('RESULE_DATA_NONE');
-		return;
+		return ctx.body = handleCustomError({ message: '暂无操作记录' });
 	}
-	const queryDoc = async ({ docId, id, title }) => {
+
+	const queryDoc = async ({ docId, id }) => {
 		const [, d] = await docModel.find(`uuid='${uuid}' AND doc_id='${docId}'`);
 		if (Array.isArray(d) && d.length > 0 && d[0]) {
 			return {
@@ -130,11 +130,11 @@ router.get('/api/recents', async (ctx) => {
 	const querySpaceQueuss = [];
 	data.forEach(n => {
 		const { type, space_id, doc_id, id, doc_title } = n;
-		if (['Edit', 'CreateEdit', 'UpdateEdit', 'LogicalDeleteEdit', 'PhysicalDeleteEdit', 'Share'].includes(type)) {
+		if (['Edit', 'CreateEdit', 'UpdateEdit', 'LogicalDeleteEdit', 'Share'].includes(type)) {
 			queryDocQueues.push(queryDoc({ docId: doc_id, id, title: doc_title }));
 			querySpaceQueuss.push(querySpace({ spaceId: space_id, id }));
 		}
-		if (['CreateSpace', 'UpdateSpace', 'DeleteSpace'].includes(type)) {
+		if (['CreateSpace', 'UpdateSpace'].includes(type)) {
 			querySpaceQueuss.push(querySpace({ spaceId: space_id, id }));
 		}
 	});
