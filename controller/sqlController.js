@@ -13,23 +13,23 @@ async function tryCatchWrapper(fn) {
 function CreateMysqlModel(table) {
   return {
     execute(sql, params = {}) {
-      global.logger.info(`SQL_CONTROLLER-execute: ${sql}`);
+      global.logger.info(`SQL_CONTROLLER-EXECUTE: ${sql}`);
       return tryCatchWrapper(async () => { return mysqlBaseModel.execute(sql, params) })
     },
     find(sql) {
-      global.logger.info(`SQL_CONTROLLER-${table}-find: ${sql}`);
+      global.logger.info(`SQL_CONTROLLER-${table}-FIND: ${sql}`);
       return tryCatchWrapper(async () => { return mysqlBaseModel.find(table, sql) });
     },
     create(payload) {
-      global.logger.info(`SQL_CONTROLLER-${table}-create: ${sql}`);
+      global.logger.info(`SQL_CONTROLLER-${table}-CREATE: ${JSON.stringify(payload || {})}`);
       return tryCatchWrapper(async () => { return mysqlBaseModel.insert(table, payload) });
     },
     update(params, where) {
-      global.logger.info(`SQL_CONTROLLER-${table}-update: ${sql}`);
+      global.logger.info(`SQL_CONTROLLER-${table}-UPDATE: [WHERE]-[${where}] [params]-[${JSON.stringify(params || {})}]`);
       return tryCatchWrapper(async () => { return mysqlBaseModel.update(table, params, where) });
     },
     delete(where) {
-      global.logger.info(`SQL_CONTROLLER-${table}-delete: ${sql}`);
+      global.logger.info(`SQL_CONTROLLER-${table}-DELETE: [WHERE]-[${where}]`);
       return tryCatchWrapper(async () => { return mysqlBaseModel.delete(table, where) });
     },
   }
