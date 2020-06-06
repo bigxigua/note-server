@@ -155,7 +155,7 @@ router.get('/api/docs', async (ctx) => {
 		}
 	} = ctx.request;
 	// limit sql语句
-	const limitSql = `limit ${(pageNo - 1) * pageSize},${(pageNo - 1) * pageSize + pageSize};`;
+	const limitSql = `limit ${(pageNo - 1) * pageSize},${pageSize};`;
 	// 查详情时新增doc_id的where子句
 	const detailSql = docId ? ` and doc_id='${docId}'` : '';
 	// 模糊搜索时的子句
