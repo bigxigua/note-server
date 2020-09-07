@@ -15,9 +15,9 @@ const destDir = path.resolve(__dirname, '../../file-uploader/upload/file/images/
 const pageresOptions = {
   delay: 0, // 延时多少秒开始截图
   crop: true, // 裁切到设定的高度
-  cookies: [], // 转到要使用Cookie的网站，然后将其从DevTools复制粘贴。
+  cookies: [], // 获取源站cookie
   userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.100 Safari/537.36', // Custom user agent
-  hide: ['.article-header_right'], // 隐藏与CSS选择器匹配的DOM元素数组。
+  hide: ['.article-header', '.catalog-wrapper', '.bookcatalog-wrapper'], // 隐藏与CSS选择器匹配的DOM元素数组。
 };
 
 /**

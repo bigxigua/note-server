@@ -2,6 +2,7 @@ const router = require('koa-router')();
 const { serializReuslt, handleCustomError } = require('../util/serializable');
 const CreateMysqlModel = require('../controller/sqlController');
 const fnv = require('fnv-plus');
+const { getIn } = require('../util/util');
 
 const spaceModel = CreateMysqlModel('space');
 const docModel = CreateMysqlModel('doc');
@@ -79,15 +80,17 @@ router.post('/api/create/space', async (ctx) => {
  *  @returns {Array} 空间列表
  */
 router.get('/api/spaces', async (ctx) => {
-  const { query: { limit = 10, uuid, q = '' } } = ctx.request;
-  // 查询此前一个月内有修改的。前limit条
-  const [error, data] = await spaceModel.find(`uuid='${uuid}' ${q ? `AND name LIKE '%${q}%'` : ''}limit ${limit}`);
-  if (error || !Array.isArray(data)) {
-    ctx.body = serializReuslt('SYSTEM_INNER_ERROR');
-    return;
-  }
+  const { query: { uuid, q = '', pageSize = 10, pageNo = 1 } } = ctx.request;
+  const limitSql = `limit ${(pageNo - 1) * pageSize},${pageSize};`;
+  const commonsql = `where uuid='${uuid}' ${q ? `AND name LIKE '%${q}%'` : ''}`;
+  const result = await Promise.all([
+    spaceModel.execute(`select sql_calc_found_rows count(*) as count from space ${commonsql}`),
+    spaceModel.execute(`select * from space ${commonsql} order by id desc ${limitSql}`)]);
+  const total = getIn(result, ['0', '1', '0', 'count'], 0);
+  const spaces = getIn(result, ['1', '1'], 0);
   ctx.body = serializReuslt('SUCCESS', {
-    spaces: data
+    spaces,
+    total
   });
 });
 
